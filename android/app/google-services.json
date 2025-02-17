@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "647537760977",
+    "project_id": "examgo-5171e",
+    "storage_bucket": "examgo-5171e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:647537760977:android:26031a7218e1bf503683f0",
+        "android_client_info": {
+          "package_name": "com.example.examgo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhu7CLrbdizh2puM34foaH2mE1do-q5Oc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
