@@ -12,7 +12,7 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController passwordController = TextEditingController();
   String userType = "Student"; // Default selection
 
-  void _handleSignup() {
+  Future<void> _handleSignup() async {
     String email = emailController.text;
     String password = passwordController.text;
 
@@ -132,15 +132,14 @@ class _SignupPageState extends State<SignupPage> {
                   Container(
                     padding: const EdgeInsets.only(top: 3, left: 3),
                     child: ElevatedButton(
-                      onPressed: ()  {
-                      },
                       style: ElevatedButton.styleFrom(
                         shape: const StadiumBorder(),
                         padding: const EdgeInsets.symmetric(vertical: 12,horizontal: 20),
                         backgroundColor: Colors.lightBlueAccent.withValues(alpha: 0.1),
                       ),
+                      onPressed: _handleSignup,
                       child:  const Text(
-                        "Sign up",
+                        "Sign Up ",
                         style: TextStyle(fontSize: 20, color: Colors.black),
                       ),
                     ),
