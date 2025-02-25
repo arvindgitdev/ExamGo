@@ -59,10 +59,10 @@ class _SignupPageState extends State<SignupPage> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.lightBlueAccent.withOpacity(0.1), // Light blue background
+                      color: Colors.lightBlueAccent.withValues(alpha: 0.1), // Light blue background
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: Colors.lightBlueAccent.withOpacity(0.1),// Border color
+                        color: Colors.lightBlueAccent.withValues(alpha: 0.1),// Border color
                         width: 2, // Border width
                       ),
                     ),
@@ -71,7 +71,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: DropdownButton<String>(
                         value: userType,
                         isExpanded: true,
-                        dropdownColor: Colors.lightBlueAccent.withOpacity(0.5), // Background color of dropdown
+                        dropdownColor: Colors.lightBlueAccent.withValues(alpha: 0.5), // Background color of dropdown
                         items: ["Teacher", "Student"].map((String role) {
                           return DropdownMenuItem(
                             value: role,
@@ -88,7 +88,7 @@ class _SignupPageState extends State<SignupPage> {
                         },
                         icon: Icon(
                           Icons.arrow_drop_down,
-                          color: Colors.lightBlueAccent.withOpacity(0.1),
+                          color: Colors.lightBlueAccent.withValues(alpha: 0.1),
                         ),
                       ),
                     ),
@@ -104,7 +104,7 @@ class _SignupPageState extends State<SignupPage> {
                         borderRadius: BorderRadius.circular(18),
                         borderSide: BorderSide.none,
                       ),
-                      fillColor: Colors.lightBlueAccent.withOpacity(0.1),
+                      fillColor: Colors.lightBlueAccent.withValues(alpha: 0.1),
                       filled: true,
                       prefixIcon: const Icon(Icons.person),
                     ),
@@ -122,7 +122,7 @@ class _SignupPageState extends State<SignupPage> {
                         borderRadius: BorderRadius.circular(18),
                         borderSide: BorderSide.none,
                       ),
-                      fillColor: Colors.lightBlueAccent.withOpacity(0.1),
+                      fillColor: Colors.lightBlueAccent.withValues(alpha: 0.1),
                       filled: true,
                       prefixIcon: const Icon(Icons.person),
                     ),
@@ -134,14 +134,14 @@ class _SignupPageState extends State<SignupPage> {
                     child: ElevatedButton(
                       onPressed: ()  {
                       },
-                      child:  const Text(
-                        "Sign up",
-                        style: TextStyle(fontSize: 20, color: Colors.black),
-                      ),
                       style: ElevatedButton.styleFrom(
                         shape: const StadiumBorder(),
                         padding: const EdgeInsets.symmetric(vertical: 12,horizontal: 20),
-                        backgroundColor: Colors.lightBlueAccent.withOpacity(0.1),
+                        backgroundColor: Colors.lightBlueAccent.withValues(alpha: 0.1),
+                      ),
+                      child:  const Text(
+                        "Sign up",
+                        style: TextStyle(fontSize: 20, color: Colors.black),
                       ),
                     ),
                   ),
@@ -160,7 +160,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           spreadRadius: 1,
                           blurRadius: 1,
                           offset: const Offset(0, 1), // changes position of shadow
@@ -178,7 +178,7 @@ class _SignupPageState extends State<SignupPage> {
                             width: 30.0,
                             decoration: const BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage(""),
+                                image: AssetImage("assets/images/google.jpg"),
                                 fit: BoxFit.cover,
                               ),
                               shape: BoxShape.circle,
