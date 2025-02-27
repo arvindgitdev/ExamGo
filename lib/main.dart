@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:examgo/signup.dart';
+import 'package:examgo/Admindashboard.dart';
 
 import 'firebase_options.dart';
 

@@ -1,3 +1,5 @@
+import 'package:examgo/Admindashboard.dart';
+import 'package:examgo/studentpage.dart';
 import 'package:flutter/material.dart';
 
 class SignupPage extends StatefulWidget {
@@ -47,7 +49,7 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ),
                   const SizedBox(
-                    height: 20,
+                    height: 15,
                   ),
                   Text(
                     "Create your account",
@@ -55,6 +57,7 @@ class _SignupPageState extends State<SignupPage> {
                   )
                 ],
               ),
+              const SizedBox(height:15),
               Column(
                 children: [
                   Container(
@@ -137,7 +140,20 @@ class _SignupPageState extends State<SignupPage> {
                         padding: const EdgeInsets.symmetric(vertical: 12,horizontal: 20),
                         backgroundColor: Colors.lightBlueAccent.withValues(alpha: 0.1),
                       ),
-                      onPressed: _handleSignup,
+                      /*onPressed: _handleSignup,*/
+                      onPressed: () {
+                        if (userType == "Admin") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AdminDashboard()),
+                          );
+                        } else if (userType == "Student") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AdminDashboard() ),
+                          );
+                        }
+                      },
                       child:  const Text(
                         "Sign Up ",
                         style: TextStyle(fontSize: 20, color: Colors.black),
