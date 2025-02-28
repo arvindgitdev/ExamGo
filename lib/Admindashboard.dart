@@ -1,3 +1,4 @@
+import 'package:examgo/exam.dart';
 import 'package:flutter/material.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -46,19 +47,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Admin Dashboard"),
+        title: const Text("Dashboard"),
+        backgroundColor: Colors.blue.shade100,
         // Add logout
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
-          children: const <Widget>[
-            DrawerHeader(
+          children: <Widget>[
+            const DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: Colors.lightBlueAccent,
               ),
               child: Text(
-                'ExamGo Admin',
+                'Admin',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -66,22 +68,36 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.dashboard),
-              title: Text('Dashboard'),
+              leading: const Icon(Icons.dashboard, color: Colors.lightBlueAccent),
+              title: const Text('Dashboard'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminDashboard()),
+                );
+              },
             ),
+
             ListTile(
-              leading: Icon(Icons.assignment),
-              title: Text('Exams'),
+              leading: const Icon(Icons.assignment, color: Colors.lightBlueAccent),
+              title: const Text('Exam'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ExamPage()),
+                );
+              },
             ),
-            ListTile(
+
+            const ListTile(
               leading: Icon(Icons.group),
               title: Text('Users'),
             ),
-            ListTile(
+            const ListTile(
               leading: Icon(Icons.insights),
               title: Text('Reports'),
             ),
-            ListTile(
+            const ListTile(
               leading: Icon(Icons.settings),
               title: Text('Settings'),
             ),
