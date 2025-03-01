@@ -1,4 +1,5 @@
 import 'package:examgo/createexam.dart';
+import 'package:examgo/manageexam.dart';
 import 'package:flutter/material.dart';
 
 class ExamPage extends StatelessWidget {
@@ -39,7 +40,11 @@ class ExamPage extends StatelessWidget {
                 ),
               ),
               onPressed: () {
-                // Navigate to Manage Exam Page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ManageExamsPage()),
+                );
+
               },
               child: Text("Manage Exam", style: TextStyle(fontSize: 18, color: Colors.white)),
             ),
