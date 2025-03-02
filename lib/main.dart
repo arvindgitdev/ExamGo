@@ -23,13 +23,15 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const ResponsiveLayout(),
+      home: const ResponsiveLayout(child: SignupPage()), // Apply ResponsiveLayout globally
     );
   }
 }
 
 class ResponsiveLayout extends StatelessWidget {
-  const ResponsiveLayout({super.key});
+  final Widget child;
+
+  const ResponsiveLayout({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +39,7 @@ class ResponsiveLayout extends StatelessWidget {
       builder: (context, constraints) {
         if (constraints.maxWidth < 600) {
           // Mobile layout
-          return const SignupPage();
+          return child;
         } else {
           // Web/Tablet layout with additional padding
           return Scaffold(
@@ -45,7 +47,7 @@ class ResponsiveLayout extends StatelessWidget {
               child: Container(
                 width: 400, // Restrict width for a better web layout
                 padding: const EdgeInsets.all(20),
-                child: const SignupPage(),
+                child: child,
               ),
             ),
           );
