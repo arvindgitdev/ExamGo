@@ -74,7 +74,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: DropdownButton<String>(
                         value: userType,
                         isExpanded: true,
-                        dropdownColor: Colors.lightBlueAccent.withValues(alpha: 0.5), // Background color of dropdown
+                        dropdownColor: Colors.lightBlueAccent.withValues(alpha: 0.1), // Background color of dropdown
                         items: ["Teacher", "Student"].map((String role) {
                           return DropdownMenuItem(
                             value: role,
@@ -142,7 +142,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       /*onPressed: _handleSignup,*/
                       onPressed: () {
-                        if (userType == "Admin") {
+                        if (userType == "Teacher") {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => AdminDashboard()),
@@ -150,7 +150,7 @@ class _SignupPageState extends State<SignupPage> {
                         } else if (userType == "Student") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => AdminDashboard() ),
+                            MaterialPageRoute(builder: (context) => Studentpage() ),
                           );
                         }
                       },

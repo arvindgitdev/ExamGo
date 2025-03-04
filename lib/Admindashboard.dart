@@ -9,7 +9,6 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  // replace with actual data from backend
   List<Exam> currentExams = [];
   List<Exam> upcomingExams = [];
   List<FlaggedActivity> flaggedActivities = [];
@@ -49,7 +48,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
       appBar: AppBar(
         title: const Text("Dashboard"),
         backgroundColor: Colors.blue.shade100,
-        // Add logout
       ),
       drawer: Drawer(
         child: ListView(
@@ -73,11 +71,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AdminDashboard()),
+                  MaterialPageRoute(builder: (context) => const AdminDashboard()),
                 );
               },
             ),
-
             ListTile(
               leading: const Icon(Icons.assignment, color: Colors.lightBlueAccent),
               title: const Text('Exam'),
@@ -88,7 +85,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 );
               },
             ),
-
             const ListTile(
               leading: Icon(Icons.group),
               title: Text('Users'),
@@ -111,16 +107,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCard("Current Exams", currentExams),
-            _buildCard("Upcoming Exams", upcomingExams),
-            _buildCard("Recent Flagged Activities", flaggedActivities),
+            _buildExamCard("Current Exams", currentExams),
+            _buildExamCard("Upcoming Exams", upcomingExams),
+            _buildFlaggedCard("Recent Flagged Activities", flaggedActivities),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCard(String title, List<dynamic> items) {
+  Widget _buildExamCard(String title, List<Exam> exams) {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -129,29 +125,69 @@ class _AdminDashboardState extends State<AdminDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style:
-                const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            if (items.isEmpty)
-              const Text("No items to display.")
+            if (exams.isEmpty)
+              const Text("No exams to display.")
             else
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: items.length,
+                itemCount: exams.length,
                 itemBuilder: (context, index) {
-                  final item = items[index];
+                  final exam = exams[index];
                   return ListTile(
-                    title: Text(item.name),
-                    subtitle: Text(item.details),
+                    title: Text(exam.name),
+                    subtitle: Text(exam.details),
+                    onTap: () {
+                      // Navigate to exam details page
+                    },
+                  );
+                },
+              ),
+            if (exams.isNotEmpty)
+              TextButton(
+                onPressed: () {
+                  // Navigate to "View All" page
+                },
+                child: const Text("View All"),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFlaggedCard(String title, List<FlaggedActivity> activities) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            if (activities.isEmpty)
+              const Text("No flagged activities.")
+            else
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: activities.length,
+                itemBuilder: (context, index) {
+                  final activity = activities[index];
+                  return ListTile(
+                    title: Text(activity.participant),
+                    subtitle: Text(activity.details),
                     onTap: () {
                       // Navigate to details page
                     },
                   );
                 },
               ),
-            if (items.isNotEmpty)
+            if (activities.isNotEmpty)
               TextButton(
                 onPressed: () {
                   // Navigate to "View All" page
@@ -165,7 +201,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 }
 
-//replace with actual data structures
 class Exam {
   final String name;
   final String status;
