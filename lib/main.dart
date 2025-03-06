@@ -1,6 +1,7 @@
+import 'package:examgo/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:examgo/signup.dart';
+
 import 'firebase_options.dart';
 
 void main() async {
@@ -21,9 +22,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Exam Go',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
       ),
-      home: const ResponsiveLayout(child: SignupPage()), // Apply ResponsiveLayout globally
+      home: ResponsiveLayout(child: SplashScreen()), // Apply ResponsiveLayout globally
     );
   }
 }
