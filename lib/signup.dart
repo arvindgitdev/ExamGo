@@ -1,6 +1,6 @@
-import 'package:examgo/Admindashboard.dart';
-import 'package:examgo/studentpage.dart';
+import 'package:examgo/Teacher/Admindashboard.dart';
 import 'package:flutter/material.dart';
+import 'Student/studentpage.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});

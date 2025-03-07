@@ -1,4 +1,4 @@
-import 'package:examgo/exam.dart';
+import 'package:examgo/Teacher/exam.dart';
 import 'package:flutter/material.dart';
 
 class AdminDashboard extends StatefulWidget {
