@@ -52,6 +52,7 @@ class _CreateexamState extends State<Createexam> {
       appBar: AppBar(
         title: Text(widget.exam == null ? "Create Exam" : "Edit Exam"),
         backgroundColor: Colors.blue.shade100,
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -101,7 +102,7 @@ class _CreateexamState extends State<Createexam> {
                     MaterialPageRoute(builder: (context) => CreateExamScreen() ),
                   );
                 },
-                child: Text("Add Question"),
+                child: Text("Add Questions"),
               ),
             ],
           ),

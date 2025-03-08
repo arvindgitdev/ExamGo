@@ -30,6 +30,7 @@ class _ManageExamsPageState extends State<ManageExamsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manage Exams'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),

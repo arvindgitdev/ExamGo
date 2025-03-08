@@ -11,6 +11,7 @@ class ExamPage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Exam Page"),
         backgroundColor: Colors.blue.shade100,
+        automaticallyImplyLeading: false,
       ),
       body: Center(
         child: Column(

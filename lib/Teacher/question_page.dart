@@ -23,7 +23,6 @@ class CreateExamScreenState extends State<CreateExamScreen> {
   }
 
   void saveExam() {
-    // Check if all questions have text
     bool isValid = true;
     for (var question in questions) {
       if (question.questionController.text.isEmpty) {
@@ -42,7 +41,6 @@ class CreateExamScreenState extends State<CreateExamScreen> {
       return;
     }
 
-    // Simulate saving the exam (You can add Firebase Firestore or database logic here)
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Exam Saved Successfully!"),
@@ -55,8 +53,9 @@ class CreateExamScreenState extends State<CreateExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Create Exam"),
+        title: const Text("Add Questions"),
         backgroundColor: Colors.blue,
+        automaticallyImplyLeading: false, // Removes the back arrow
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -79,7 +78,6 @@ class CreateExamScreenState extends State<CreateExamScreen> {
               },
             ),
           ),
-          // Save Button
           Padding(
             padding: const EdgeInsets.all(16),
             child: ElevatedButton(
@@ -119,7 +117,6 @@ class QuestionCardState extends State<QuestionCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Question TextField
             TextField(
               controller: widget.questionModel.questionController,
               decoration: const InputDecoration(
@@ -128,8 +125,6 @@ class QuestionCardState extends State<QuestionCard> {
               ),
             ),
             const SizedBox(height: 10),
-
-            // Question Type Dropdown
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -151,13 +146,11 @@ class QuestionCardState extends State<QuestionCard> {
               ],
             ),
             const SizedBox(height: 10),
-
-            // Multiple Choice Options
             if (widget.questionModel.questionType == "Multiple Choice") ...[
               Column(
                 children: List.generate(widget.questionModel.options.length, (index) {
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0), // Added spacing
+                    padding: const EdgeInsets.only(bottom: 8.0),
                     child: Row(
                       children: [
                         Radio(
@@ -196,8 +189,6 @@ class QuestionCardState extends State<QuestionCard> {
                 child: const Text("Add Option"),
               ),
             ],
-
-            // Short Answer Input (Example Text)
             if (widget.questionModel.questionType == "Short Answer") ...[
               const SizedBox(height: 10),
               TextField(
@@ -208,14 +199,10 @@ class QuestionCardState extends State<QuestionCard> {
                 enabled: false,
               ),
             ],
-
-            // Fill in the Blank Example
             if (widget.questionModel.questionType == "Fill in the Blank") ...[
               const SizedBox(height: 10),
               const Text("Example: The capital of France is _____"),
             ],
-
-            // Code Question Type
             if (widget.questionModel.questionType == "Code") ...[
               const SizedBox(height: 10),
               TextField(
@@ -227,8 +214,6 @@ class QuestionCardState extends State<QuestionCard> {
                 ),
               ),
             ],
-
-            // Required Toggle
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -243,8 +228,6 @@ class QuestionCardState extends State<QuestionCard> {
                 ),
               ],
             ),
-
-            // Delete Button
             Align(
               alignment: Alignment.centerRight,
               child: IconButton(
@@ -259,7 +242,6 @@ class QuestionCardState extends State<QuestionCard> {
   }
 }
 
-// Question Model to store question data
 class QuestionModel {
   TextEditingController questionController = TextEditingController();
   String questionType = "Multiple Choice";
