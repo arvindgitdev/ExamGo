@@ -79,6 +79,7 @@ class _CreateexamState extends State<Createexam> {
                 maxLines: 3,
                 onSaved: (value) => _description = value!,
               ),
+              SizedBox(height: 20),
               TextFormField(
                 initialValue: _durationMinutes.toString(),
                 decoration: const InputDecoration(labelText: "Duration (minutes)"),
@@ -94,7 +95,7 @@ class _CreateexamState extends State<Createexam> {
                 },
                 onSaved: (value) => _durationMinutes = int.parse(value!),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 25),
               ElevatedButton(
                 onPressed: (){
                   Navigator.push(
