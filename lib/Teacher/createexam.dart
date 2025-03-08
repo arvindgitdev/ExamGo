@@ -6,8 +6,6 @@ class Exam {
   String name;
   String description;
   int durationMinutes;
-
-
   Exam({required this.id, required this.name, required this.description, required this.durationMinutes});
 }
 

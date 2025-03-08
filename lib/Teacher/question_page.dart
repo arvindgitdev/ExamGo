@@ -23,10 +23,31 @@ class CreateExamScreenState extends State<CreateExamScreen> {
   }
 
   void saveExam() {
-    // Here you can save the exam to Firebase, Local Storage, etc.
-    print("Exam saved with ${questions.length} questions.");
+    // Check if all questions have text
+    bool isValid = true;
+    for (var question in questions) {
+      if (question.questionController.text.isEmpty) {
+        isValid = false;
+        break;
+      }
+    }
+
+    if (!isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter all questions before saving."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Simulate saving the exam (You can add Firebase Firestore or database logic here)
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Exam saved successfully!")),
+      const SnackBar(
+        content: Text("Exam Saved Successfully!"),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
