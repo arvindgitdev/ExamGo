@@ -1,3 +1,4 @@
+import 'package:examgo/Teacher/question_page.dart';
 import 'package:flutter/material.dart';
 
 class Exam {
@@ -5,9 +6,9 @@ class Exam {
   String name;
   String description;
   int durationMinutes;
-  List<String> questions;
 
-  Exam({required this.id, required this.name, required this.description, required this.durationMinutes, required this.questions});
+
+  Exam({required this.id, required this.name, required this.description, required this.durationMinutes});
 }
 
 class Createexam extends StatefulWidget {
@@ -24,7 +25,7 @@ class _CreateexamState extends State<Createexam> {
   late String _examName;
   late String _description;
   late int _durationMinutes;
-  List<String> _questions = [];
+
 
   @override
   void initState() {
@@ -37,20 +38,15 @@ class _CreateexamState extends State<Createexam> {
       _examName = widget.exam!.name;
       _description = widget.exam!.description;
       _durationMinutes = widget.exam!.durationMinutes;
-      _questions = List.from(widget.exam!.questions);
+
     } else {
       _examName = '';
       _description = '';
       _durationMinutes = 60;
-      _questions = [];
+
     }
   }
 
-  void _addQuestion() {
-    setState(() {
-      _questions.add('');
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,53 +95,14 @@ class _CreateexamState extends State<Createexam> {
                 onSaved: (value) => _durationMinutes = int.parse(value!),
               ),
               SizedBox(height: 20),
-              Container(
-                padding: EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Questions", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: _questions.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5.0),
-                          child: TextFormField(
-                            initialValue: _questions[index],
-                            decoration: InputDecoration(labelText: "Question ${index + 1}"),
-                            onChanged: (value) => _questions[index] = value,
-                          ),
-                        );
-                      },
-                    ),
-                    SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: _addQuestion,
-                      child: Text("Add Question"),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    debugPrint(
-                        'Saving exam: Name: $_examName, Description: $_description, Duration: $_durationMinutes, Questions: $_questions');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Exam Saved!')),
-                    );
-                  }
+                onPressed: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CreateExamScreen() ),
+                  );
                 },
-                child: const Text("Save"),
+                child: Text("Add Question"),
               ),
             ],
           ),

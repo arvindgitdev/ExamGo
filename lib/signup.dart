@@ -14,7 +14,7 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController passwordController = TextEditingController();
   String userType = "Student"; // Default selection
 
-  Future<void> _handleSignup() async {
+ /* Future<void> _handleSignup() async {
     String email = emailController.text;
     String password = passwordController.text;
 
@@ -26,8 +26,7 @@ class _SignupPageState extends State<SignupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter email and password')),
       );
-    }
-  }
+    }*/
 
   @override
   Widget build(BuildContext context) {
