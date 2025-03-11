@@ -1,4 +1,4 @@
-import 'package:examgo/signup.dart';
+import 'package:examgo/Login_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -34,7 +34,7 @@ class SplashScreenState extends State<SplashScreen> with SingleTickerProviderSta
     Timer(const Duration(seconds: 3), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => const ResponsiveLayout(child: SignupPage()),
+          builder: (context) => ResponsiveLayout(child: LoginPage()),
         ),
       );
     });

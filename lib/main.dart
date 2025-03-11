@@ -1,7 +1,9 @@
+
 import 'package:examgo/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
+import 'Provider/auth_provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -18,13 +20,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Exam Go',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Exam Go',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
+        ),
+        home: const ResponsiveLayout(child: SplashScreen()), // Apply ResponsiveLayout globally
       ),
-      home: ResponsiveLayout(child: SplashScreen()), // Apply ResponsiveLayout globally
     );
   }
 }
@@ -38,16 +45,25 @@ class ResponsiveLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 600) {
-          // Mobile layout
-          return child;
+        double screenWidth = MediaQuery.of(context).size.width;
+        double paddingValue = screenWidth * 0.005; // 5% padding for all screens
+
+        if (screenWidth < 600) {
+          // Mobile layout (adjust font size, padding dynamically)
+          return Scaffold(
+            body: Padding(
+              padding: EdgeInsets.all(paddingValue),
+              child: child,
+            ),
+          );
         } else {
-          // Web/Tablet layout with additional padding
+          // Tablet/Web layout (restrict width for better layout)
           return Scaffold(
             body: Center(
               child: Container(
-                width: 400, // Restrict width for a better web layout
-                padding: const EdgeInsets.all(20),
+                width: screenWidth * 0.5, // 50% of screen width for larger screens
+                constraints: const BoxConstraints(maxWidth: 450), // Max width limit
+                padding: EdgeInsets.all(paddingValue),
                 child: child,
               ),
             ),
