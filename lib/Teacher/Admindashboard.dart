@@ -1,4 +1,5 @@
 import 'package:examgo/Teacher/exam.dart';
+import 'package:examgo/Teacher/settings.dart';
 import 'package:flutter/material.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -85,6 +86,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 );
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.assignment, color: Colors.lightBlueAccent),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),
+                );
+              },
+            ),
             const ListTile(
               leading: Icon(Icons.group),
               title: Text('Users'),
@@ -92,10 +103,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
             const ListTile(
               leading: Icon(Icons.insights),
               title: Text('Reports'),
-            ),
-            const ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Settings'),
             ),
           ],
         ),
