@@ -1,3 +1,6 @@
+import 'package:examgo/Student/available%20exam.dart';
+import 'package:examgo/Student/exam%20history.dart';
+import 'package:examgo/Student/settings.dart';
 import 'package:flutter/material.dart';
 
 class Studentpage extends StatelessWidget {
@@ -38,22 +41,21 @@ class Studentpage extends StatelessWidget {
               leading: const Icon(Icons.list_alt),
               title: const Text('Available Exams'),
               onTap: () {
-
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const AvailableExams()));
               },
             ),
             ListTile(
               leading: const Icon(Icons.history),
               title: const Text('Exam History'),
               onTap: () {
-
-              },
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamHistory()));
+                },
             ),
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () {
-                /*Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const StudentSettings()));*/
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const StudentSettings()));
               },
             ),
             ListTile(
