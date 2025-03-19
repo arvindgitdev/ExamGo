@@ -9,17 +9,17 @@ import '../Teacher/Admindashboard.dart';
 class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  User? get currentUser => _auth.currentUser;
-  /// **🔥 Sign Up with Email & Password**
-  Future<String?> signUpWithEmail(String email, String password, String userType, BuildContext context) async {
-    try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
 
-      // Save user data to Firestore
+  User? get currentUser => _auth.currentUser;
+
+  /// **🔥 Sign Up with Email & Password**
+  Future<void> signUpWithEmail(
+      String email, String password, String userType, BuildContext context) async {
+    try {
+      UserCredential userCredential =
+      await _auth.createUserWithEmailAndPassword(email: email, password: password);
       User? user = userCredential.user;
+
       if (user != null) {
         await _firestore.collection("users").doc(user.uid).set({
           'uid': user.uid,
@@ -28,105 +28,138 @@ class AuthProvider extends ChangeNotifier {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-        // Navigate based on user type
-        if (userType == "Teacher") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => AdminDashboard()),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => Studentpage()),
-          );
-        }
+        // ✅ Navigate & Clear History
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+              userType == "Teacher" ? AdminDashboard() : Studentpage()),
+              (route) => false,
+        );
+
+        notifyListeners();
       }
-      return null; // Success
     } catch (e) {
-      return e.toString(); // Return error message
+      _showSnackbar(context, "Error: ${e.toString()}");
     }
   }
 
   /// **🔑 Sign In with Email & Password**
-  Future<String?> signInWithEmail(String email, String password, String expectedUserType) async {
+  Future<void> signInWithEmail(
+      String email, String password, String expectedUserType, BuildContext context) async {
     try {
-      // Step 1: Sign in the user with email & password
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential =
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
       User? user = userCredential.user;
 
       if (user != null) {
-        // Step 2: Fetch user details from Firestore
         DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
 
         if (userDoc.exists) {
           String userType = userDoc['userType'] ?? "";
 
-          // Step 3: Check if userType matches the expected type
           if (userType != expectedUserType) {
-            return "Access denied: Incorrect user type";
+            _showSnackbar(context, "Access denied: Incorrect user type");
+            return;
           }
 
-          return null; // Success
+          // ✅ Navigate & Clear History
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                userType == "Teacher" ? AdminDashboard() : Studentpage()),
+                (route) => false,
+          );
+
+          notifyListeners();
         } else {
-          return "User not found in database";
+          _showSnackbar(context, "User not found in database");
         }
       }
-
-      return "Authentication failed";
     } catch (e) {
-      return e.toString(); // Return error message
+      _showSnackbar(context, "Error: ${e.toString()}");
     }
   }
 
   /// **🔵 Google Sign-In**
-  Future<String?> signInWithGoogle() async {
+  Future<void> signInWithGoogle(String userType, BuildContext context) async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return "Google Sign-In cancelled";
+      if (googleUser == null) return;
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+
       UserCredential userCredential = await _auth.signInWithCredential(credential);
       User? user = userCredential.user;
 
       if (user != null) {
-        // Store user data in Firestore
         DocumentReference userRef = _firestore.collection('users').doc(user.uid);
-
-        // Check if user already exists
         DocumentSnapshot userDoc = await userRef.get();
-        if (!userDoc.exists) {
+
+        if (userDoc.exists) {
+          String existingUserType = userDoc['userType'] ?? "";
+
+          if (existingUserType.isNotEmpty && existingUserType != userType) {
+            _showSnackbar(context, "Access denied: Incorrect user type");
+            return;
+          }
+        } else {
           await userRef.set({
             'uid': user.uid,
             'name': user.displayName ?? "No Name",
             'email': user.email ?? "No Email",
             'photoUrl': user.photoURL ?? "",
-
+            'userType': userType,
             'createdAt': FieldValue.serverTimestamp(),
-            'lastLoginAt': FieldValue.serverTimestamp(),
-          });
-        } else {
-          // Update last login time
-          await userRef.update({
             'lastLoginAt': FieldValue.serverTimestamp(),
           });
         }
 
-      }
+        // ✅ Navigate after successful login
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+              userType == "Teacher" ? AdminDashboard() : Studentpage()),
+              (route) => false,
+        );
 
-      return null; // Success
+        notifyListeners();
+      }
     } catch (e) {
-      return e.toString();
+      _showSnackbar(context, "Error: ${e.toString()}");
+    }
+  }
+
+  /// **🔁 Forgot Password**
+  Future<void> resetPassword(String email, BuildContext context) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      _showSnackbar(context, "Password reset link sent to your email");
+    } catch (e) {
+      _showSnackbar(context, "Error: ${e.toString()}");
     }
   }
 
   /// **🚪 Sign Out**
-  Future<void> signOut() async {
-    await _auth.signOut();
-    await GoogleSignIn().signOut();
-    notifyListeners();
+  Future<void> signOut(BuildContext context) async {
+    try {
+      await _auth.signOut();
+      await GoogleSignIn().signOut();
+      _showSnackbar(context, "Signed out successfully");
+      notifyListeners();
+    } catch (e) {
+      _showSnackbar(context, "Error signing out: ${e.toString()}");
+    }
+  }
+
+  /// **🔔 Show Snackbar**
+  void _showSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 }

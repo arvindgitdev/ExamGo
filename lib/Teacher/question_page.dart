@@ -1,14 +1,28 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class CreateExamScreen extends StatefulWidget {
-  const CreateExamScreen({super.key});
+import 'Admindashboard.dart';
+
+class QuestionScreen extends StatefulWidget {
+  final String examTitle;
+  final String examDate;
+  final String examTime;
+
+  const QuestionScreen({
+    super.key,
+    required this.examTitle,
+    required this.examDate,
+    required this.examTime,
+  });
 
   @override
-  CreateExamScreenState createState() => CreateExamScreenState();
+  QuestionScreenState createState() => QuestionScreenState();
 }
 
-class CreateExamScreenState extends State<CreateExamScreen> {
+class QuestionScreenState extends State<QuestionScreen> {
   List<QuestionModel> questions = [QuestionModel()];
+  bool isLoading = false;
 
   void addQuestion() {
     setState(() {
@@ -18,44 +32,98 @@ class CreateExamScreenState extends State<CreateExamScreen> {
 
   void deleteQuestion(int index) {
     setState(() {
+      questions[index].dispose();
       questions.removeAt(index);
     });
   }
 
-  void saveExam() {
-    bool isValid = true;
+  @override
+  void dispose() {
     for (var question in questions) {
-      if (question.questionController.text.isEmpty) {
-        isValid = false;
-        break;
-      }
+      question.dispose();
     }
+    super.dispose();
+  }
 
-    if (!isValid) {
+  Future<void> saveExam() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please enter all questions before saving."),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text("User not authenticated."), backgroundColor: Colors.red),
       );
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Exam Saved Successfully!"),
-        backgroundColor: Colors.green,
-      ),
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 10),
+              Text("Saving exam..."),
+            ],
+          ),
+        );
+      },
     );
+
+    try {
+      DocumentReference examRef = await FirebaseFirestore.instance.collection("exams").add({
+        "title": widget.examTitle,
+        "date": widget.examDate,
+        "time": widget.examTime,
+        "createdBy": user.uid,
+        "createdAt": Timestamp.now(),
+      });
+
+      for (var question in questions) {
+        await examRef.collection("questions").add({
+          "question": question.questionController.text,
+          "type": question.questionType,
+          "options": question.options.map((e) => e.text).toList(),
+          "codeAnswer": question.codeAnswerController.text,
+          "isRequired": question.isRequired,
+        });
+      }
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Exam saved successfully!"), backgroundColor: Colors.green),
+      );
+
+      // Navigate to another page (replace 'NextScreen' with your desired screen)
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => AdminDashboard()), // Change `NextScreen` accordingly
+      );
+
+    } catch (e) {
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show failure message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save exam: $e"), backgroundColor: Colors.red),
+      );
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Questions"),
-        backgroundColor: Colors.blue,
-        automaticallyImplyLeading: false, // Removes the back arrow
+        title: Text(widget.examTitle),
+        backgroundColor: Colors.blue.shade100,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -63,33 +131,38 @@ class CreateExamScreenState extends State<CreateExamScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: questions.length,
-              itemBuilder: (context, index) {
-                return QuestionCard(
-                  key: ValueKey(index),
-                  questionModel: questions[index],
-                  onDelete: () => deleteQuestion(index),
-                );
-              },
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text("Date: ${widget.examDate}  |  Time: ${widget.examTime}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.builder(
+                itemCount: questions.length,
+                itemBuilder: (context, index) {
+                  return QuestionCard(
+                    key: ValueKey(index),
+                    questionModel: questions[index],
+                    onDelete: () => deleteQuestion(index),
+                  );
+                },
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton(
+            const SizedBox(height: 16),
+            ElevatedButton(
               onPressed: saveExam,
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                textStyle: const TextStyle(fontSize: 18),
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 30),
+                backgroundColor: Colors.blueAccent,
+                textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               child: const Text("Save Exam"),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -106,44 +179,37 @@ class QuestionCard extends StatefulWidget {
 }
 
 class QuestionCardState extends State<QuestionCard> {
+  int? selectedOption;
+
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: widget.questionModel.questionController,
               decoration: const InputDecoration(
-                hintText: "Question",
+                labelText: "Enter Question",
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Question Type: "),
-                DropdownButton<String>(
-                  value: widget.questionModel.questionType,
-                  items: ["Multiple Choice", "Short Answer", "Fill in the Blank", "Code"]
-                      .map((type) => DropdownMenuItem(
-                    value: type,
-                    child: Text(type),
-                  ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      widget.questionModel.questionType = value!;
-                    });
-                  },
-                ),
-              ],
+            DropdownButtonFormField<String>(
+              value: widget.questionModel.questionType,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              items: ["Multiple Choice", "Short Answer", "Fill in the Blank", "Code"]
+                  .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  widget.questionModel.questionType = value!;
+                });
+              },
             ),
             const SizedBox(height: 10),
             if (widget.questionModel.questionType == "Multiple Choice") ...[
@@ -153,10 +219,14 @@ class QuestionCardState extends State<QuestionCard> {
                     padding: const EdgeInsets.only(bottom: 8.0),
                     child: Row(
                       children: [
-                        Radio(
+                        Radio<int>(
                           value: index,
-                          groupValue: null,
-                          onChanged: (_) {},
+                          groupValue: selectedOption,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedOption = value;
+                            });
+                          },
                         ),
                         Expanded(
                           child: TextField(
@@ -168,7 +238,7 @@ class QuestionCardState extends State<QuestionCard> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.remove_circle, color: Colors.black),
+                          icon: const Icon(Icons.remove_circle, color: Colors.red),
                           onPressed: () {
                             setState(() {
                               widget.questionModel.options.removeAt(index);
@@ -189,31 +259,7 @@ class QuestionCardState extends State<QuestionCard> {
                 child: const Text("Add Option"),
               ),
             ],
-            if (widget.questionModel.questionType == "Short Answer") ...[
-              const SizedBox(height: 10),
-              TextField(
-                decoration: const InputDecoration(
-                  hintText: "Short answer text",
-                  border: OutlineInputBorder(),
-                ),
-                enabled: false,
-              ),
-            ],
-            if (widget.questionModel.questionType == "Fill in the Blank") ...[
-              const SizedBox(height: 10),
-              const Text("Example: The capital of France is _____"),
-            ],
-            if (widget.questionModel.questionType == "Code") ...[
-              const SizedBox(height: 10),
-              TextField(
-                controller: widget.questionModel.codeAnswerController,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  hintText: "Enter your code here...",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -245,7 +291,15 @@ class QuestionCardState extends State<QuestionCard> {
 class QuestionModel {
   TextEditingController questionController = TextEditingController();
   String questionType = "Multiple Choice";
-  List<TextEditingController> options = [TextEditingController()];
+  List<TextEditingController> options = [TextEditingController(), TextEditingController()];
   TextEditingController codeAnswerController = TextEditingController();
   bool isRequired = false;
+
+  void dispose() {
+    questionController.dispose();
+    for (var option in options) {
+      option.dispose();
+    }
+    codeAnswerController.dispose();
+  }
 }

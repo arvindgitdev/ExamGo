@@ -1,9 +1,8 @@
 import 'package:examgo/Provider/auth_provider.dart';
 import 'package:examgo/Signup_page.dart';
-import 'package:examgo/Teacher/Admindashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'Student/studentpage.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -163,22 +162,13 @@ class _LoginPageState extends State<LoginPage> {
                           isLoading = true;
                         });
 
-                        String? result = await Provider.of<AuthProvider>(context, listen: false)
-                            .signInWithEmail(emailController.text, passwordController.text,userType);
+                         await Provider.of<AuthProvider>(context, listen: false)
+                            .signInWithEmail(emailController.text, passwordController.text,userType,context);
 
                         setState(() {
                           isLoading = false;
                         });
 
-                        if (result == null) {
-                          if (userType == "Teacher") {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => AdminDashboard()));
-                          } else {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => Studentpage()));
-                          }
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result)));
-                        }
                       },
                       child: isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
@@ -206,21 +196,13 @@ class _LoginPageState extends State<LoginPage> {
                         isLoading = true;
                       });
 
-                      String? result = await Provider.of<AuthProvider>(context, listen: false).signInWithGoogle();
+                       await Provider.of<AuthProvider>(context, listen: false).signInWithGoogle(userType, context);
 
                       setState(() {
                         isLoading = false;
                       });
 
-                      if (result == null) {
-                        if (userType == "Teacher") {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => AdminDashboard()));
-                        } else {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => Studentpage()));
-                        }
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result)));
-                      }
+
                     },
                     child: isLoading
                         ? const CircularProgressIndicator(color: Colors.blue)

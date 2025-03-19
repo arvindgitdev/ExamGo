@@ -16,7 +16,7 @@ class Studentpage extends StatelessWidget {
           children: <Widget>[
             const DrawerHeader(
               decoration: BoxDecoration(
-                color: const Color(0xFFB3E5Ff),
+                color: Color(0xFFB3E5Ff),
               ),
               child: Text(
                 'Dashboard',

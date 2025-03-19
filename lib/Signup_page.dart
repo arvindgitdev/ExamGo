@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'Provider/auth_provider.dart';
-import 'Student/studentpage.dart';
-import 'Teacher/Admindashboard.dart';
+
 
 
 class SignupPage extends StatefulWidget {
@@ -22,7 +21,7 @@ class SignupPageState extends State<SignupPage> {
   final TextEditingController _emailController = TextEditingController();
 
   RegExp passValid =
-  RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$');
+  RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#$&*~]).{8,}$');
 
   bool validatePassword(String password) {
     return passValid.hasMatch(password);
@@ -30,7 +29,7 @@ class SignupPageState extends State<SignupPage> {
 
   bool validateEmail(String email) {
     // Basic email validation using regex
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+    return RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
   }
 
   bool _obscurePassword = true;
@@ -172,7 +171,7 @@ class SignupPageState extends State<SignupPage> {
                             });
                           },
                           child: Icon(
-                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
                             color: Colors.grey,
                           ),
                         ),
@@ -206,7 +205,7 @@ class SignupPageState extends State<SignupPage> {
                             });
                           },
                           child: Icon(
-                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
                             color: Colors.grey,
                           ),
                         ),
@@ -232,18 +231,13 @@ class SignupPageState extends State<SignupPage> {
                       });
 
                       // Call sign-up function from AuthProvider
-                      String? result = await Provider.of<AuthProvider>(context, listen: false)
+                       await Provider.of<AuthProvider>(context, listen: false)
                           .signUpWithEmail(_emailController.text.trim(), _passwordController.text, userType, context);
 
                       setState(() {
                         isLoading = false;
                       });
 
-                      if (result != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(result)),
-                        );
-                      }
                     }
                   },
                   child: isLoading
@@ -270,21 +264,12 @@ class SignupPageState extends State<SignupPage> {
                         isLoading = true;
                       });
 
-                      String? result = await Provider.of<AuthProvider>(context, listen: false).signInWithGoogle();
+                       await Provider.of<AuthProvider>(context, listen: false).signInWithGoogle(userType, context);
 
                       setState(() {
                         isLoading = false;
                       });
 
-                      if (result == null) {
-                        if (userType == "Teacher") {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => AdminDashboard()));
-                        } else {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => Studentpage()));
-                        }
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result)));
-                      }
                     },
                     child: isLoading
                         ? const CircularProgressIndicator(color: Colors.blue)
