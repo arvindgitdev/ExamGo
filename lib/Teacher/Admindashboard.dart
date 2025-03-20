@@ -180,6 +180,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
           // Navigate to exam details
+
         },
       ),
     );
