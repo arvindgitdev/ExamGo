@@ -3,12 +3,24 @@ import 'package:examgo/Teacher/manageexam.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'Admindashboard.dart';
+
 class ExamPage extends StatelessWidget {
   const ExamPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => AdminDashboard()),
+            (route) => false,
+      );
+      return false; // Prevent default back action
+    },
+    child:
+      Scaffold(
       appBar: AppBar(
         title: Text(
           "Exam Management",
@@ -50,6 +62,7 @@ class ExamPage extends StatelessWidget {
           ],
         ),
       ),
+    )
     );
   }
 

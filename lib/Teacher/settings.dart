@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'Admindashboard.dart';
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -15,7 +17,17 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return
+      WillPopScope(
+        onWillPop: () async {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => AdminDashboard()),
+            (route) => false,
+      );
+      return false; // Prevent default back action
+    },
+    child:Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
         backgroundColor: Colors.blueAccent,
@@ -116,25 +128,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
-    );
+    )
+      );
   }
 }
 
-/*void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
-      themeMode: ThemeMode.system,
-      home: const SettingsPage(),
-    );
-  }
-}*/

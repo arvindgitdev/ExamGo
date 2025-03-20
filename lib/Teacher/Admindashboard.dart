@@ -97,31 +97,31 @@ class _AdminDashboardState extends State<AdminDashboard> {
               color: Colors.blueAccent,
             ),
           ),
-          _buildDrawerItem(Icons.dashboard, "Dashboard", () {
+          _buildDrawerItem(Icons.dashboard_customize_outlined, "Dashboard", () {
             Navigator.pop(
               context,
               MaterialPageRoute(builder: (context) => const AdminDashboard()),
             );
 
           }),
-          _buildDrawerItem(Icons.assignment, "Exam", () {
+          _buildDrawerItem(Icons.assignment_outlined, "Exam", () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => ExamPage()),
             );
           }),
-          _buildDrawerItem(Icons.settings, "Settings", () {
+          _buildDrawerItem(Icons.settings_outlined, "Settings", () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => SettingsPage()),
             );
           }),
-          _buildDrawerItem(Icons.logout, "Logout", () async {
+          _buildDrawerItem(Icons.logout_outlined, "Logout", () async {
             await Provider.of<AuthProvider>(context, listen: false).signOut(context);
           }),
           const Divider(),
-          _buildDrawerItem(Icons.group, "Users", () {}),
-          _buildDrawerItem(Icons.insights, "Reports", () {}),
+          _buildDrawerItem(Icons.groups_outlined, "Users", () {}),
+          _buildDrawerItem(Icons.insights_outlined, "Reports", () {}),
         ],
       ),
     );
