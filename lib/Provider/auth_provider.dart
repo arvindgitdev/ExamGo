@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:examgo/Login_page.dart';
 import 'package:examgo/Student/studentpage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Teacher/Admindashboard.dart';
 
@@ -28,12 +30,15 @@ class AuthProvider extends ChangeNotifier {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
+        // ✅ Store login state
+        await _saveLoginState(userType);
+
         // ✅ Navigate & Clear History
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
               builder: (context) =>
-              userType == "Teacher" ? AdminDashboard() : Studentpage()),
+              userType == "Teacher" ? const AdminDashboard() : const Studentpage()),
               (route) => false,
         );
 
@@ -63,12 +68,15 @@ class AuthProvider extends ChangeNotifier {
             return;
           }
 
+          // ✅ Store login state
+          await _saveLoginState(userType);
+
           // ✅ Navigate & Clear History
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
                 builder: (context) =>
-                userType == "Teacher" ? AdminDashboard() : Studentpage()),
+                userType == "Teacher" ? const AdminDashboard() : const Studentpage()),
                 (route) => false,
           );
 
@@ -120,12 +128,15 @@ class AuthProvider extends ChangeNotifier {
           });
         }
 
+        // ✅ Store login state
+        await _saveLoginState(userType);
+
         // ✅ Navigate after successful login
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
               builder: (context) =>
-              userType == "Teacher" ? AdminDashboard() : Studentpage()),
+              userType == "Teacher" ? const AdminDashboard() : const Studentpage()),
               (route) => false,
         );
 
@@ -136,26 +147,36 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// **🔁 Forgot Password**
-  Future<void> resetPassword(String email, BuildContext context) async {
-    try {
-      await _auth.sendPasswordResetEmail(email: email);
-      _showSnackbar(context, "Password reset link sent to your email");
-    } catch (e) {
-      _showSnackbar(context, "Error: ${e.toString()}");
-    }
-  }
-
   /// **🚪 Sign Out**
   Future<void> signOut(BuildContext context) async {
     try {
       await _auth.signOut();
       await GoogleSignIn().signOut();
+
+      // ✅ Clear login state
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
       _showSnackbar(context, "Signed out successfully");
+
+      // Navigate to LoginPage after logout
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+            (route) => false,
+      );
+
       notifyListeners();
     } catch (e) {
       _showSnackbar(context, "Error signing out: ${e.toString()}");
     }
+  }
+
+  /// **🔐 Save Login State**
+  Future<void> _saveLoginState(String userType) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('userType', userType);
   }
 
   /// **🔔 Show Snackbar**

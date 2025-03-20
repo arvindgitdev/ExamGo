@@ -23,13 +23,17 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Exam Go',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
-        ),
-        home: const ResponsiveLayout(child: SplashScreen()), // Apply ResponsiveLayout globally
+      child: Consumer< AuthProvider>(
+    builder: (context,authProvider,child){
+    return MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: 'Exam Go',
+    theme: ThemeData(
+    colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
+    ),
+    home: const ResponsiveLayout(child: SplashScreen()), // Apply ResponsiveLayout globally
+    );
+    }
       ),
     );
   }

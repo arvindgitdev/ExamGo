@@ -1,5 +1,6 @@
 import 'package:examgo/Teacher/question_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class Exam {
@@ -92,9 +93,15 @@ class _CreateexamState extends State<Createexam> {
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        title: Text(widget.exam == null ? "Create Exam" : "Edit Exam"),
-        backgroundColor: Colors.blue.shade100,
+        title: Text(
+          "Create Exam",
+          style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
+
+        ),
         automaticallyImplyLeading: false,
+        backgroundColor: Colors.blue.shade600,
+        centerTitle: true,
+        elevation: 4,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

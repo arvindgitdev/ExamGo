@@ -1,7 +1,9 @@
+import 'package:examgo/Provider/auth_provider.dart';
 import 'package:examgo/Student/available%20exam.dart';
 import 'package:examgo/Student/exam%20history.dart';
 import 'package:examgo/Student/settings.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class Studentpage extends StatelessWidget {
   const Studentpage({super.key});
@@ -61,8 +63,8 @@ class Studentpage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
+              onTap: ()  async {
+                await  Provider.of<AuthProvider>(context, listen: false).signOut(context);
               },
             ),
           ],

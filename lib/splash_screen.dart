@@ -1,8 +1,9 @@
 import 'package:examgo/Login_page.dart';
+import 'package:examgo/Student/studentpage.dart';
+import 'package:examgo/Teacher/Admindashboard.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
-
-import 'main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,52 +20,64 @@ class SplashScreenState extends State<SplashScreen> with SingleTickerProviderSta
   void initState() {
     super.initState();
 
-    // Animation Controller
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2), // Animation duration
-    )..forward(); // Start animation
+      duration: const Duration(seconds: 2),
+    )
+      ..forward();
 
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeIn,
     );
 
-    // Navigate to next page after splash screen
-    Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => ResponsiveLayout(child: LoginPage()),
-        ),
-      );
+    Future.delayed(const Duration(seconds: 2), () {
+      _navigateToNextScreen();
     });
   }
 
+  Future<void> _navigateToNextScreen() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    String? userType = prefs.getString('userType');
+
+    if (isLoggedIn) {
+      if (userType == 'Teacher') {
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const AdminDashboard()));
+      } else {
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const Studentpage()));
+      }
+    } else {
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => const LoginPage()));
+    }
+  }
+
+
   @override
   void dispose() {
-    _controller.dispose(); // Dispose animation controller
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Background color
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo with Fade-in Effect
             FadeTransition(
               opacity: _fadeAnimation,
               child: Image.asset(
-                'assets/icon/icon.png', // Replace with your actual icon
+                'assets/icon/icon.png',
                 width: 150,
               ),
             ),
             const SizedBox(height: 20),
-
-            // Welcome Text with Fade-in
             FadeTransition(
               opacity: _fadeAnimation,
               child: const Text(
@@ -78,8 +91,6 @@ class SplashScreenState extends State<SplashScreen> with SingleTickerProviderSta
               ),
             ),
             const SizedBox(height: 30),
-
-            // Subtitle with Fade-in
             FadeTransition(
               opacity: _fadeAnimation,
               child: const Text(
@@ -90,16 +101,7 @@ class SplashScreenState extends State<SplashScreen> with SingleTickerProviderSta
                 ),
               ),
             ),
-
             const SizedBox(height: 30),
-
-            // Loading Indicator
-           /* FadeTransition(
-              opacity: _fadeAnimation,
-              child: const CircularProgressIndicator(
-                color: Colors.blue, // Change color if needed
-              ),
-            ),*/
           ],
         ),
       ),
