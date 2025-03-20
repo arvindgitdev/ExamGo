@@ -99,9 +99,13 @@ class _CreateexamState extends State<Createexam> {
 
         ),
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.blue.shade600,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade900]),
+          ),
+        ),
         centerTitle: true,
-        elevation: 4,
+        elevation: 6,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -219,6 +223,7 @@ class _CreateexamState extends State<Createexam> {
                               examTitle: _examName,
                               examDate: DateFormat('yyyy-MM-dd').format(_selectedDate),
                               examTime: _selectedTime.format(context),
+                              duration: _durationMinutes,
                             ),
                           ),
                         );

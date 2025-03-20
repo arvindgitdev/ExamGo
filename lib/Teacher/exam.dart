@@ -28,9 +28,13 @@ class ExamPage extends StatelessWidget {
 
         ),
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.blue.shade600,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade900]),
+          ),
+        ),
         centerTitle: true,
-        elevation: 4,
+        elevation: 6,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),

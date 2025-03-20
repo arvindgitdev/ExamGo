@@ -9,12 +9,14 @@ class QuestionScreen extends StatefulWidget {
   final String examTitle;
   final String examDate;
   final String examTime;
+  final int duration;
 
   const QuestionScreen({
     super.key,
     required this.examTitle,
     required this.examDate,
     required this.examTime,
+    required this.duration,
   });
 
   @override
@@ -74,12 +76,19 @@ class QuestionScreenState extends State<QuestionScreen> {
     );
 
     try {
-      DocumentReference examRef = await FirebaseFirestore.instance.collection("exams").add({
+      // Generate a unique exam ID
+      String examId = FirebaseFirestore.instance.collection("exams").doc().id;
+
+      DocumentReference examRef = FirebaseFirestore.instance.collection("exams").doc(examId);
+
+      await examRef.set({
+        "examId": examId, // Store the unique ID
         "title": widget.examTitle,
         "date": widget.examDate,
         "time": widget.examTime,
+        "duration": widget.duration,
         "createdBy": user.uid,
-        "createdAt": Timestamp.now(),
+        "examTimestamp":  _getExamTimestamp(), // Timestamp for sorting
       });
 
       for (var question in questions) {
@@ -100,10 +109,10 @@ class QuestionScreenState extends State<QuestionScreen> {
         const SnackBar(content: Text("Exam saved successfully!"), backgroundColor: Colors.green),
       );
 
-      // Navigate to another page (replace 'NextScreen' with your desired screen)
+      // Navigate to Admin Dashboard
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => AdminDashboard()), // Change `NextScreen` accordingly
+        MaterialPageRoute(builder: (context) => AdminDashboard()),
       );
 
     } catch (e) {
@@ -116,6 +125,48 @@ class QuestionScreenState extends State<QuestionScreen> {
       );
     }
   }
+  int _getExamTimestamp() {
+    try {
+      // Parse date properly
+      DateTime parsedDate = DateTime.parse(widget.examDate); // Ensure YYYY-MM-DD format
+
+      // Parse time properly (handling 12-hour format with AM/PM)
+      TimeOfDay parsedTime = _parseTime(widget.examTime);
+
+      // Combine date and time into a single DateTime object
+      DateTime examDateTime = DateTime(
+        parsedDate.year,
+        parsedDate.month,
+        parsedDate.day,
+        parsedTime.hour,
+        parsedTime.minute,
+      );
+
+      return examDateTime.millisecondsSinceEpoch;
+    } catch (e) {
+      print("Error parsing date/time: $e");
+      return DateTime.now().millisecondsSinceEpoch;
+    }
+  }
+
+// Helper function to convert "hh:mm AM/PM" to TimeOfDay
+  TimeOfDay _parseTime(String timeStr) {
+    final format = RegExp(r'(\d+):(\d+) (\w{2})'); // Matches "hh:mm AM/PM"
+    final match = format.firstMatch(timeStr);
+
+    if (match != null) {
+      int hour = int.parse(match.group(1)!);
+      int minute = int.parse(match.group(2)!);
+      String period = match.group(3)!;
+
+      if (period == "PM" && hour != 12) hour += 12;
+      if (period == "AM" && hour == 12) hour = 0;
+
+      return TimeOfDay(hour: hour, minute: minute);
+    }
+
+    return TimeOfDay.now();
+  }
 
 
   @override
@@ -123,10 +174,13 @@ class QuestionScreenState extends State<QuestionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.examTitle,style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),),
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.blue.shade600,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade900]),
+          ),
+        ),
         centerTitle: true,
-        elevation: 4,
+        elevation: 6,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),

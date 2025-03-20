@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'Admindashboard.dart';
 
@@ -29,9 +30,16 @@ class _SettingsPageState extends State<SettingsPage> {
     },
     child:Scaffold(
       appBar: AppBar(
-        title: const Text("Settings"),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        title: Text("Settings",
+          style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade900]),
+          ),
+        ),
+        centerTitle: true,
+        elevation: 6,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
