@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'Admindashboard.dart';
 
@@ -121,9 +122,11 @@ class QuestionScreenState extends State<QuestionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.examTitle),
-        backgroundColor: Colors.blue.shade100,
+        title: Text(widget.examTitle,style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),),
         automaticallyImplyLeading: false,
+        backgroundColor: Colors.blue.shade600,
+        centerTitle: true,
+        elevation: 4,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),

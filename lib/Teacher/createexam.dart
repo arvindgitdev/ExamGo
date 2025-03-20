@@ -117,6 +117,7 @@ class _CreateexamState extends State<Createexam> {
                 children: [
                   // Exam Name
                   TextFormField(
+                    textInputAction: TextInputAction.next,
                     initialValue: _examName,
                     decoration: InputDecoration(
                       labelText: "Exam Name",
