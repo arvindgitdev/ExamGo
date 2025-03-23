@@ -1,3 +1,4 @@
+import 'package:examgo/Student/startexam.dart';
 import 'package:flutter/material.dart';
 
 class AvailableExams extends StatelessWidget {
@@ -30,7 +31,7 @@ class AvailableExams extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Available Exams'),
-        backgroundColor: Colors.lightBlue[300], // Consistent light blue theme
+        backgroundColor: Colors.lightBlue[300],
       ),
       body: ListView.builder(
         itemCount: availableExams.length,
@@ -76,14 +77,15 @@ class AvailableExams extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close the dialog
+                Navigator.pop(context);
+
               },
               child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
-               /* Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (context)=> ExamPage(examTitle: examTitle)));*/
+               Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> StartExamPage()));
               },
               child: const Text('Start'),
             ),
