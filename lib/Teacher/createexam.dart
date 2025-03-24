@@ -23,6 +23,7 @@ class _CreateexamState extends State<Createexam> {
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           "Create Exam",
           style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),

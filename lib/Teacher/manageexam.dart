@@ -58,9 +58,11 @@ class _ManageExamsPageState extends State<ManageExamsPage> {
           style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w600,color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: Colors.blue.shade600,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade900])),
+        ),
         automaticallyImplyLeading: false,
-        elevation: 4,
+        elevation: 6,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),

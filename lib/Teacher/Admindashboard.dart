@@ -53,18 +53,21 @@ class AdminDashboardState extends State<AdminDashboard> {
     _timer.cancel(); // Cancel timer when the widget is disposed
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.currentUser;
     return Scaffold(
       appBar: _buildAppBar(),
       drawer: _buildDrawer(),
       body: RefreshIndicator(
         onRefresh: _refreshData,
         child: StreamBuilder<QuerySnapshot>(
-          key: _streamBuilderKey, // Add the key here to force rebuilds
+          key: _streamBuilderKey,
+          // Add the key here to force rebuilds
           stream: FirebaseFirestore.instance
               .collection("exams")
+              .where("createdBy", isEqualTo: user?.uid)
               .orderBy("examTimestamp", descending: false)
               .snapshots(),
           builder: (context, snapshot) {
