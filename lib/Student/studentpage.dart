@@ -2,7 +2,6 @@ import 'package:examgo/Provider/auth_provider.dart';
 import 'package:examgo/Student/available%20exam.dart';
 import 'package:examgo/Student/exam%20history.dart';
 import 'package:examgo/Student/settings.dart';
-import 'package:examgo/Student/startexam.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
