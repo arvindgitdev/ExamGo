@@ -3,29 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-class Exam {
-  final String id;
-  String name;
-  String description;
-  int durationMinutes;
-  DateTime examDate;
-  TimeOfDay examTime;
-
-  Exam({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.durationMinutes,
-    required this.examDate,
-    required this.examTime,
-  });
-}
-
 class Createexam extends StatefulWidget {
-  final Exam? exam;
-
-  const Createexam({super.key, this.exam});
-
   @override
   State<Createexam> createState() => _CreateexamState();
 }
@@ -33,60 +11,12 @@ class Createexam extends StatefulWidget {
 class _CreateexamState extends State<Createexam> {
   final _formKey = GlobalKey<FormState>();
 
-  late String _examName;
-  late String _description;
-  late int _durationMinutes;
-  late DateTime _selectedDate;
-  late TimeOfDay _selectedTime;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeForm();
-  }
-
-  void _initializeForm() {
-    if (widget.exam != null) {
-      _examName = widget.exam!.name;
-      _description = widget.exam!.description;
-      _durationMinutes = widget.exam!.durationMinutes;
-      _selectedDate = widget.exam!.examDate;
-      _selectedTime = widget.exam!.examTime;
-    } else {
-      _examName = '';
-      _description = '';
-      _durationMinutes = 60;
-      _selectedDate = DateTime.now();
-      _selectedTime = TimeOfDay.now();
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
-    }
-  }
-
+  String _examName = '';
+  String _description = '';
+  int _selectedHours = 1;
+  int _selectedMinutes = 0;
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
 
   @override
   Widget build(BuildContext context) {
@@ -96,15 +26,11 @@ class _CreateexamState extends State<Createexam> {
         title: Text(
           "Create Exam",
           style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
-
-        ),
-        automaticallyImplyLeading: false,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade900]),
-          ),
         ),
         centerTitle: true,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade900])),
+        ),
         elevation: 6,
       ),
       body: SingleChildScrollView(
@@ -117,12 +43,11 @@ class _CreateexamState extends State<Createexam> {
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Exam Name
                   TextFormField(
                     textInputAction: TextInputAction.next,
-                    initialValue: _examName,
                     decoration: InputDecoration(
                       labelText: "Exam Name",
                       prefixIcon: Icon(Icons.assignment),
@@ -135,52 +60,38 @@ class _CreateexamState extends State<Createexam> {
 
                   // Description
                   TextFormField(
-                    initialValue: _description,
                     decoration: InputDecoration(
                       labelText: "Description",
                       prefixIcon: Icon(Icons.description),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    maxLines: 3,
-                    validator: (value) => value!.isEmpty ? "Enter Description" : null,
+                    validator: (value) => value!.isEmpty ? "Enter description" : null,
                     onSaved: (value) => _description = value!,
                   ),
                   SizedBox(height: 15),
 
-                  // Duration
-                  TextFormField(
-                    initialValue: _durationMinutes.toString(),
-                    decoration: InputDecoration(
-                      labelText: "Duration (minutes)",
-                      prefixIcon: Icon(Icons.timer),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return "Enter duration";
-                      if (int.tryParse(value) == null) return "Invalid duration";
-                      return null;
-                    },
-                    onSaved: (value) => _durationMinutes = int.parse(value!),
-                  ),
-                  SizedBox(height: 15),
-
-                  // Date Picker
+                  // Exam Date Picker
                   GestureDetector(
-                    onTap: () => _selectDate(context),
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(Duration(days: 365)),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _selectedDate = picked;
+                        });
+                      }
+                    },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "Exam Date: ${DateFormat.yMMMMd().format(_selectedDate)}",
-                            style: TextStyle(fontSize: 16),
-                          ),
+                          Text("Exam Date: ${DateFormat.yMMMMd().format(_selectedDate)}", style: TextStyle(fontSize: 16)),
                           Icon(Icons.calendar_today, color: Colors.blue),
                         ],
                       ),
@@ -188,54 +99,101 @@ class _CreateexamState extends State<Createexam> {
                   ),
                   SizedBox(height: 15),
 
-                  // Time Picker
+                  // Exam Time Picker
                   GestureDetector(
-                    onTap: () => _selectTime(context),
+                    onTap: () async {
+                      final TimeOfDay? picked = await showTimePicker(context: context, initialTime: _selectedTime);
+                      if (picked != null) {
+                        setState(() {
+                          _selectedTime = picked;
+                        });
+                      }
+                    },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "Exam Time: ${_selectedTime.format(context)}",
-                            style: TextStyle(fontSize: 16),
-                          ),
+                          Text("Exam Time: ${_selectedTime.format(context)}", style: TextStyle(fontSize: 16)),
                           Icon(Icons.access_time, color: Colors.blue),
                         ],
                       ),
                     ),
                   ),
+                  SizedBox(height: 15),
+
+                  // Duration Dropdowns
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<int>(
+                          value: _selectedHours,
+                          decoration: InputDecoration(
+                            labelText: "Hours",
+                            prefixIcon: Icon(Icons.timer),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          items: List.generate(6, (index) => DropdownMenuItem(value: index, child: Text("$index hrs"))),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedHours = value!;
+                            });
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: DropdownButtonFormField<int>(
+                          value: _selectedMinutes,
+                          decoration: InputDecoration(
+                            labelText: "Minutes",
+                            prefixIcon: Icon(Icons.timer),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          items: [0, 5,10,15,20,25, 30,35,40, 45,50]
+                              .map((minutes) => DropdownMenuItem(value: minutes, child: Text("$minutes min")))
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedMinutes = value!;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 20),
 
                   // Add Questions Button
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QuestionScreen(
-                              examTitle: _examName,
-                              examDate: DateFormat('yyyy-MM-dd').format(_selectedDate),
-                              examTime: _selectedTime.format(context),
-                              duration: _durationMinutes,
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _formKey.currentState!.save();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QuestionScreen(
+                                examTitle: _examName,
+                                examDate: DateFormat('yyyy-MM-dd').format(_selectedDate),
+                                examTime: _selectedTime.format(context),
+                                durationHours: _selectedHours,
+                                durationMinutes: _selectedMinutes,
+                              ),
                             ),
-                          ),
-                        );
-                      }
-                    },
-                    icon: Icon(Icons.add_circle),
-                    label: Text("Add Questions"),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                      backgroundColor: Colors.blue.shade300,
+                          );
+                        }
+                      },
+                      icon: Icon(Icons.add_circle),
+                      label: Text("Add Questions"),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 15),
+                        backgroundColor: Colors.blue.shade300,
+                      ),
                     ),
-                  ),
+                  )
                 ],
               ),
             ),

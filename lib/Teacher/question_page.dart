@@ -9,14 +9,16 @@ class QuestionScreen extends StatefulWidget {
   final String examTitle;
   final String examDate;
   final String examTime;
-  final int duration;
+  final int durationHours;
+  final int durationMinutes;
 
   const QuestionScreen({
     super.key,
     required this.examTitle,
     required this.examDate,
     required this.examTime,
-    required this.duration,
+    required this.durationHours,
+    required this.durationMinutes,
   });
 
   @override
@@ -47,8 +49,56 @@ class QuestionScreenState extends State<QuestionScreen> {
     }
     super.dispose();
   }
-
-  Future<void> saveExam() async {
+  void previewExam() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Exam Preview"),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("📌 Exam Title: ${widget.examTitle}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text("📅 Date: ${widget.examDate}  🕒 Time: ${widget.examTime}"),
+                Text("⏳ Duration: ${widget.durationHours} hrs ${widget.durationMinutes} mins"),
+                const Divider(),
+                ...questions.asMap().entries.map((entry) {
+                  int index = entry.key + 1;
+                  QuestionModel question = entry.value;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Q$index: ${question.questionController.text}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                      if (question.questionType == "Multiple Choice")
+                        ...question.options.map((e) => Text("🔹 ${e.text}")),
+                      if (question.questionType == "Code")
+                        Text("🖥 Code Answer: ${question.codeAnswerController.text}"),
+                      const SizedBox(height: 8),
+                    ],
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Edit"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                createExam();
+              },
+              child: const Text("Confirm & Submit"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  Future<void> createExam() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,7 +118,7 @@ class QuestionScreenState extends State<QuestionScreen> {
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 10),
-              Text("Saving exam..."),
+              Text("Creating exam..."),
             ],
           ),
         );
@@ -86,9 +136,9 @@ class QuestionScreenState extends State<QuestionScreen> {
         "title": widget.examTitle,
         "date": widget.examDate,
         "time": widget.examTime,
-        "duration": widget.duration,
+        "duration": "${widget.durationHours}h ${widget.durationMinutes}m",
         "createdBy": user.uid,
-        "examTimestamp":  _getExamTimestamp(), // Timestamp for sorting
+        "examTimestamp":  _getExamTimestamp(),
       });
 
       for (var question in questions) {
@@ -106,7 +156,7 @@ class QuestionScreenState extends State<QuestionScreen> {
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Exam saved successfully!"), backgroundColor: Colors.green),
+        const SnackBar(content: Text("Exam Created successfully!"), backgroundColor: Colors.green),
       );
 
       // Navigate to Admin Dashboard
@@ -121,7 +171,7 @@ class QuestionScreenState extends State<QuestionScreen> {
 
       // Show failure message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to save exam: $e"), backgroundColor: Colors.red),
+        SnackBar(content: Text("Failed to Create exam: $e"), backgroundColor: Colors.red),
       );
     }
   }
@@ -173,7 +223,12 @@ class QuestionScreenState extends State<QuestionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.examTitle,style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),),
+        automaticallyImplyLeading: false,
+        iconTheme: IconThemeData(color: Colors.white),
+        title: Text(widget.examTitle,
+          style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600,
+              color: Colors.white),
+        ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade900]),
@@ -210,13 +265,12 @@ class QuestionScreenState extends State<QuestionScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: saveExam,
+              onPressed:  previewExam,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 30),
-                backgroundColor: Colors.blueAccent,
-                textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  backgroundColor: Colors.blue.shade300,
               ),
-              child: const Text("Save Exam"),
+              child: const Text("Preview & Submit" ,style: TextStyle(fontSize: 18, ),),
             ),
           ],
         ),
