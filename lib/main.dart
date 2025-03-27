@@ -38,7 +38,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
 class ResponsiveLayout extends StatelessWidget {
   final Widget child;
 
