@@ -24,16 +24,16 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => AuthProvider()),
       ],
       child: Consumer< AuthProvider>(
-    builder: (context,authProvider,child){
-    return MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: 'Exam Go',
-    theme: ThemeData(
-    colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
-    ),
-    home: const ResponsiveLayout(child: SplashScreen()), // Apply ResponsiveLayout globally
-    );
-    }
+          builder: (context,authProvider,child){
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Exam Go',
+              theme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
+              ),
+              home: const ResponsiveLayout(child: SplashScreen()), // Apply ResponsiveLayout globally
+            );
+          }
       ),
     );
   }

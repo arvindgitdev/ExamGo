@@ -1,15 +1,8 @@
-import 'package:examgo/Teacher/createexam.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-class Exam {
-  final String id;
-  String name;
-  String description;
-  int durationMinutes;
-
-  Exam({required this.id, required this.name, required this.description, required this.durationMinutes});
-}
+import 'package:provider/provider.dart';
+import '../Provider/auth_provider.dart';
 
 class ManageExamsPage extends StatefulWidget {
   const ManageExamsPage({super.key});
@@ -19,198 +12,201 @@ class ManageExamsPage extends StatefulWidget {
 }
 
 class _ManageExamsPageState extends State<ManageExamsPage> {
-  final List<Exam> exams = [
-    Exam(id: '1', name: 'Math Exam', description: 'Algebra, Geometry, and Trigonometry', durationMinutes: 60),
-    Exam(id: '2', name: 'Science Quiz', description: 'Physics, Chemistry, and Biology', durationMinutes: 30),
-    Exam(id: '3', name: 'English Test', description: 'Grammar, Comprehension, and Writing', durationMinutes: 45),
-  ];
-
-  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
-
-  void _deleteExam(int index) {
-    final removedExam = exams[index];
-    setState(() {
-      exams.removeAt(index);
-    });
-
-    _listKey.currentState?.removeItem(
-      index,
-          (context, animation) => _buildExamItem(removedExam, index, animation),
-      duration: const Duration(milliseconds: 300),
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${removedExam.name} deleted'),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.currentUser;
+
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: false,
         title: Text(
-          'Manage Exams',
-          style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w600,color: Colors.white),
+          "Manage Exams",
+          style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade900]),
+          ),
         ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade900])),
-        ),
-        automaticallyImplyLeading: false,
-        elevation: 6,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) =>  Createexam()),
-              );
-            },
-          ),
-        ],
       ),
-      body: exams.isEmpty
-          ? _buildEmptyState()
-          : AnimatedList(
-        key: _listKey,
-        initialItemCount: exams.length,
-        padding: const EdgeInsets.all(16),
-        itemBuilder: (context, index, animation) {
-          return _buildExamItem(exams[index], index, animation);
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection("exams")
+            .where("createdBy", isEqualTo: user?.uid)
+            .orderBy("examTimestamp", descending: false)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return _buildEmptyState("No upcoming exams found.");
+          }
+
+          List<DocumentSnapshot> upcomingExams = [];
+          DateTime now = DateTime.now();
+
+          for (var doc in snapshot.data!.docs) {
+            Map<String, dynamic> examData = doc.data() as Map<String, dynamic>;
+            int examTimestamp = examData["examTimestamp"] ?? 0;
+            DateTime examDateTime = DateTime.fromMillisecondsSinceEpoch(examTimestamp);
+
+            if (examDateTime.isAfter(now)) {
+              upcomingExams.add(doc);
+            }
+          }
+
+          if (upcomingExams.isEmpty) {
+            return _buildEmptyState("No upcoming exams at the moment.");
+          }
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: upcomingExams.map((exam) => _buildExamCard(exam)).toList(),
+          );
         },
       ),
     );
   }
 
-  Widget _buildExamItem(Exam exam, int index, Animation<double> animation) {
-    return FadeTransition(
-      opacity: animation,
-      child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0.1, 0), end: Offset.zero).animate(animation),
-        child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 3,
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            title: Text(
-              exam.name,
-              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              '${exam.description}\nDuration: ${exam.durationMinutes} minutes',
-              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700]),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+  /// Builds the Exam Card with Edit & Delete options
+  Widget _buildExamCard(DocumentSnapshot exam) {
+    Map<String, dynamic> examData = exam.data() as Map<String, dynamic>;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 5,
+      shadowColor: Colors.blue.withOpacity(0.3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: ListTile(
+        title: Text(
+          examData["title"] ?? "Unknown Exam",
+          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blueAccent),
-                  onPressed: () {
-                    // Navigate to edit exam page
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Createexam()),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.redAccent),
-                  onPressed: () {
-                    _showDeleteConfirmationDialog(index);
-                  },
-                ),
+                const Icon(Icons.date_range, size: 18, color: Colors.grey),
+                const SizedBox(width: 6),
+                Text(examData["date"] ?? "Unknown Date", style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                const SizedBox(width: 12),
+                const Icon(Icons.access_time, size: 18, color: Colors.grey),
+                const SizedBox(width: 6),
+                Text(examData["time"] ?? "Unknown Time", style: const TextStyle(fontSize: 14, color: Colors.grey)),
               ],
             ),
-            onTap: () {
-              // Show exam details
-              _showExamDetailsDialog(exam);
-            },
-          ),
+          ],
+        ),
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == "edit") {
+              _editExam(exam);
+            } else if (value == "delete") {
+              _deleteExam(exam.id);
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(value: "edit", child: Text("Edit")),
+            const PopupMenuItem(value: "delete", child: Text("Delete")),
+          ],
         ),
       ),
     );
   }
 
-  Future<void> _showDeleteConfirmationDialog(int index) async {
-    return showDialog<void>(
+  /// Opens a dialog to edit exam details
+  void _editExam(DocumentSnapshot exam) {
+    Map<String, dynamic> examData = exam.data() as Map<String, dynamic>;
+    TextEditingController titleController = TextEditingController(text: examData["title"]);
+    TextEditingController dateController = TextEditingController(text: examData["date"]);
+    TextEditingController timeController = TextEditingController(text: examData["time"]);
+
+    showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: Text(
-            'Delete Exam',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            'Are you sure you want to delete "${exams[index].name}"?',
-            style: GoogleFonts.poppins(),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey)),
-              onPressed: () => Navigator.of(context).pop(),
+      builder: (context) => AlertDialog(
+        title: const Text("Edit Exam"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: "Exam Title"),
             ),
-            TextButton(
-              child: Text('Delete', style: GoogleFonts.poppins(color: Colors.red)),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteExam(index);
-              },
+            TextField(
+              controller: dateController,
+              decoration: const InputDecoration(labelText: "Exam Date"),
+            ),
+            TextField(
+              controller: timeController,
+              decoration: const InputDecoration(labelText: "Exam Time"),
             ),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await FirebaseFirestore.instance.collection("exams").doc(exam.id).update({
+                "title": titleController.text,
+                "date": dateController.text,
+                "time": timeController.text,
+              });
+              Navigator.pop(context);
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
     );
   }
 
-  Future<void> _showExamDetailsDialog(Exam exam) async {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: Text(
-            exam.name,
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            '${exam.description}\n\nDuration: ${exam.durationMinutes} minutes',
-            style: GoogleFonts.poppins(),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Close', style: GoogleFonts.poppins(color: Colors.blueAccent)),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        );
-      },
-    );
+  /// Deletes an exam from Firebase
+  void _deleteExam(String examId) async {
+    bool confirmDelete = await _showDeleteConfirmationDialog();
+    if (confirmDelete) {
+      await FirebaseFirestore.instance.collection("exams").doc(examId).delete();
+    }
   }
 
-  Widget _buildEmptyState() {
+  /// Shows a confirmation dialog before deleting
+  Future<bool> _showDeleteConfirmationDialog() async {
+    bool? shouldDelete = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirm Deletion"),
+        content: const Text("Are you sure you want to delete this exam?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete"),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          ),
+        ],
+      ),
+    );
+    return shouldDelete ?? false;
+  }
+
+  /// Shows an empty state when there are no upcoming exams
+  Widget _buildEmptyState(String message) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.book, size: 80, color: Colors.blue.shade400),
-          const SizedBox(height: 16),
-          Text(
-            'No exams available',
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black54),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tap the + icon to add a new exam',
-            style: GoogleFonts.poppins(fontSize: 14, color: Colors.black45),
-          ),
+          Icon(Icons.hourglass_empty, size: 80, color: Colors.grey.shade400),
+          const SizedBox(height: 10),
+          Text(message, style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey)),
         ],
       ),
     );

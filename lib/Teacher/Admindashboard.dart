@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:examgo/Teacher/exam.dart';
-import 'package:examgo/Teacher/settings.dart' show SettingsPage;
+import 'package:examgo/Teacher/montoring.dart' ;
+import 'package:examgo/Teacher/settings.dart' ;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -301,6 +302,9 @@ class AdminDashboardState extends State<AdminDashboard> {
           }),
           _buildDrawerItem(Icons.assignment_outlined, "Exam", () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => ExamPage()));
+          }),
+          _buildDrawerItem(Icons.monitor_rounded, "Monitoring", () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => MonitoringPage()));
           }),
           _buildDrawerItem(Icons.settings_outlined, "Settings", () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage()));
