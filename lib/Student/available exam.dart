@@ -100,6 +100,7 @@ class AvailableExams extends StatelessWidget {
   final String examTitle;
   const ExamPage({super.key, required this.examTitle});
   @override
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(examTitle)),

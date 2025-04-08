@@ -1,3 +1,4 @@
+import 'package:examgo/Student/Instructionpage.dart';
 import 'package:flutter/material.dart';
 
 class StartExamPage extends StatefulWidget {
@@ -38,6 +39,7 @@ class _StartExamPageState extends State<StartExamPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=> ExamInstructionsPage()));
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
                     // Implement exam start logic using _examCode

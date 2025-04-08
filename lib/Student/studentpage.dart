@@ -1,4 +1,5 @@
 import 'package:examgo/Provider/auth_provider.dart';
+import 'package:examgo/Student/Instructionpage.dart';
 import 'package:examgo/Student/available%20exam.dart';
 import 'package:examgo/Student/exam%20history.dart';
 import 'package:examgo/Student/settings.dart';
@@ -65,6 +66,7 @@ class Studentpage extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context)=> ExamInstructionsPage()));
                           String key = examKeyController.text.trim();
                           if (key.isNotEmpty) {
 
