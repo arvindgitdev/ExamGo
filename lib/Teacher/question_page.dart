@@ -1,8 +1,9 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'Admindashboard.dart';
 
 class QuestionScreen extends StatefulWidget {
@@ -11,6 +12,7 @@ class QuestionScreen extends StatefulWidget {
   final String examTime;
   final int durationHours;
   final int durationMinutes;
+  final String? examId;
 
   const QuestionScreen({
     super.key,
@@ -19,6 +21,7 @@ class QuestionScreen extends StatefulWidget {
     required this.examTime,
     required this.durationHours,
     required this.durationMinutes,
+    this.examId,
   });
 
   @override
@@ -28,6 +31,9 @@ class QuestionScreen extends StatefulWidget {
 class QuestionScreenState extends State<QuestionScreen> {
   List<QuestionModel> questions = [QuestionModel()];
   bool isLoading = false;
+
+  // Ensure to handle the examId correctly and generate it only if it doesn't exist.
+  String get examId => widget.examId ?? FirebaseFirestore.instance.collection("exams").doc().id;
 
   void addQuestion() {
     setState(() {
@@ -49,6 +55,7 @@ class QuestionScreenState extends State<QuestionScreen> {
     }
     super.dispose();
   }
+
   void previewExam() {
     showDialog(
       context: context,
@@ -98,6 +105,7 @@ class QuestionScreenState extends State<QuestionScreen> {
       },
     );
   }
+
   Future<void> createExam() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -129,10 +137,14 @@ class QuestionScreenState extends State<QuestionScreen> {
       // Generate a unique exam ID
       String examId = FirebaseFirestore.instance.collection("exams").doc().id;
 
+      // Generate the exam key only once and store it
+      String examKey = _generateExamKey(examId);
+
       DocumentReference examRef = FirebaseFirestore.instance.collection("exams").doc(examId);
 
       await examRef.set({
         "examId": examId, // Store the unique ID
+        "examKey": examKey, // Store the generated exam key
         "title": widget.examTitle,
         "date": widget.examDate,
         "time": widget.examTime,
@@ -175,15 +187,12 @@ class QuestionScreenState extends State<QuestionScreen> {
       );
     }
   }
+
   int _getExamTimestamp() {
     try {
-      // Parse date properly
-      DateTime parsedDate = DateTime.parse(widget.examDate); // Ensure YYYY-MM-DD format
-
-      // Parse time properly (handling 12-hour format with AM/PM)
+      DateTime parsedDate = DateTime.parse(widget.examDate);
       TimeOfDay parsedTime = _parseTime(widget.examTime);
 
-      // Combine date and time into a single DateTime object
       DateTime examDateTime = DateTime(
         parsedDate.year,
         parsedDate.month,
@@ -199,9 +208,8 @@ class QuestionScreenState extends State<QuestionScreen> {
     }
   }
 
-// Helper function to convert "hh:mm AM/PM" to TimeOfDay
   TimeOfDay _parseTime(String timeStr) {
-    final format = RegExp(r'(\d+):(\d+) (\w{2})'); // Matches "hh:mm AM/PM"
+    final format = RegExp(r'(\d+):(\d+) (\w{2})');
     final match = format.firstMatch(timeStr);
 
     if (match != null) {
@@ -218,6 +226,16 @@ class QuestionScreenState extends State<QuestionScreen> {
     return TimeOfDay.now();
   }
 
+  // Generate a unique exam key
+  String _generateExamKey(String examId) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = Random();
+    String examKey = '';
+    for (int i = 0; i < 8; i++) {
+      examKey += characters[random.nextInt(characters.length)];
+    }
+    return examKey;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -265,10 +283,10 @@ class QuestionScreenState extends State<QuestionScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed:  previewExam,
+              onPressed: previewExam,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 30),
-                  backgroundColor: Colors.blue.shade300,
+                backgroundColor: Colors.blue.shade300,
               ),
               child: const Text("Preview & Submit" ,style: TextStyle(fontSize: 18, ),),
             ),
@@ -371,26 +389,10 @@ class QuestionCardState extends State<QuestionCard> {
               ),
             ],
             const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Required"),
-                Switch(
-                  value: widget.questionModel.isRequired,
-                  onChanged: (value) {
-                    setState(() {
-                      widget.questionModel.isRequired = value;
-                    });
-                  },
-                ),
-              ],
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: widget.onDelete,
-              ),
+            ElevatedButton(
+              onPressed: widget.onDelete,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text("Delete Question"),
             ),
           ],
         ),
@@ -400,17 +402,17 @@ class QuestionCardState extends State<QuestionCard> {
 }
 
 class QuestionModel {
-  TextEditingController questionController = TextEditingController();
+  final TextEditingController questionController = TextEditingController();
+  final TextEditingController codeAnswerController = TextEditingController();
+  List<TextEditingController> options = [TextEditingController()];
   String questionType = "Multiple Choice";
-  List<TextEditingController> options = [TextEditingController(), TextEditingController()];
-  TextEditingController codeAnswerController = TextEditingController();
   bool isRequired = false;
 
   void dispose() {
     questionController.dispose();
+    codeAnswerController.dispose();
     for (var option in options) {
       option.dispose();
     }
-    codeAnswerController.dispose();
   }
 }

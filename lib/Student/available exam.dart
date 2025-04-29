@@ -1,4 +1,4 @@
-import 'package:examgo/Student/startexam.dart';
+
 import 'package:flutter/material.dart';
 
 class AvailableExams extends StatelessWidget {
@@ -85,7 +85,7 @@ class AvailableExams extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (context)=> StartExamPage()));
+             // Navigator.push(context, MaterialPageRoute(builder: (context)=> ExamContentPage()));
               },
               child: const Text('Start'),
             ),
