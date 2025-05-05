@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:examgo/Student/startexam.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart'; // Added for permission handling
 
 class ExamInstructionsPage extends StatefulWidget {
   final String examId;
@@ -127,6 +128,103 @@ class _ExamInstructionsPageState extends State<ExamInstructionsPage> {
     return months[monthAbbr] ?? 1;
   }
 
+  // Added: Function to request camera and microphone permissions
+  Future<bool> _requestPermissions() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.camera,
+      Permission.microphone,
+    ].request();
+
+    // Check if all permissions are granted
+    bool allGranted = true;
+    statuses.forEach((permission, status) {
+      if (!status.isGranted) {
+        allGranted = false;
+      }
+    });
+
+    return allGranted;
+  }
+
+  // Added: Show permission dialog and handle permissions
+  Future<void> _showPermissionDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Camera and Microphone Access'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('This exam requires camera and microphone access for proctoring purposes.'),
+                SizedBox(height: 10),
+                Text('The video and audio feeds will be shared with your instructor to ensure exam integrity.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Allow'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                bool granted = await _requestPermissions();
+                if (granted) {
+                  // All permissions granted, proceed to exam
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ExamContentPage(examId: widget.examId),
+                    ),
+                  );
+                } else {
+                  // Show error dialog if permissions denied
+                  _showPermissionErrorDialog();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Added: Show error dialog if permissions are denied
+  Future<void> _showPermissionErrorDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Permissions Required'),
+          content: const Text(
+            'Camera and microphone permissions are required to take this exam. Please enable them in your device settings.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Open Settings'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                openAppSettings();
+              },
+            ),
+            TextButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -243,7 +341,7 @@ class _ExamInstructionsPageState extends State<ExamInstructionsPage> {
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,6 +357,28 @@ class _ExamInstructionsPageState extends State<ExamInstructionsPage> {
                     Text("• You cannot return to previous questions once submitted"),
                     Text("• The exam will automatically submit when time expires"),
                     Text("• Use the 'End Exam' button to submit your answers early"),
+                    SizedBox(height: 10),
+                    // Added: Proctoring notice
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.videocam, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              "This exam requires camera and microphone access for proctoring purposes.",
+                              style: TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -269,12 +389,8 @@ class _ExamInstructionsPageState extends State<ExamInstructionsPage> {
               child: ElevatedButton(
                 onPressed: _canStartExam
                     ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ExamContentPage(examId: widget.examId),
-                    ),
-                  );
+                  // Modified: Show permission dialog instead of directly navigating
+                  _showPermissionDialog();
                 }
                     : null,
                 style: ElevatedButton.styleFrom(
