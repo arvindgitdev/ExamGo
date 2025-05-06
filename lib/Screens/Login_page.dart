@@ -162,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                           isLoading = true;
                         });
 
-                         await Provider.of<AuthProvider>(context, listen: false)
+                         await Provider.of<CustomAuthProvider>(context, listen: false)
                             .signInWithEmail(emailController.text, passwordController.text,userType,context);
 
                         setState(() {
@@ -196,7 +196,7 @@ class _LoginPageState extends State<LoginPage> {
                         isLoading = true;
                       });
 
-                       await Provider.of<AuthProvider>(context, listen: false).signInWithGoogle(userType, context);
+                       await Provider.of<CustomAuthProvider>(context, listen: false).signInWithGoogle(userType, context);
 
                       setState(() {
                         isLoading = false;

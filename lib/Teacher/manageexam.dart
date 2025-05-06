@@ -14,7 +14,7 @@ class ManageExamsPage extends StatefulWidget {
 class _ManageExamsPageState extends State<ManageExamsPage> {
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<CustomAuthProvider>(context, listen: false);
     final user = authProvider.currentUser;
 
     return Scaffold(

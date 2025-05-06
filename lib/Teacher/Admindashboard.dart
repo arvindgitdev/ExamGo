@@ -56,7 +56,7 @@ class AdminDashboardState extends State<AdminDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<CustomAuthProvider>(context, listen: false);
     final user = authProvider.currentUser;
 
     return Scaffold(
@@ -319,7 +319,7 @@ class AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildDrawer() {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<CustomAuthProvider>(context, listen: false);
     final user = authProvider.currentUser;
 
     return Drawer(
@@ -353,7 +353,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                 MaterialPageRoute(builder: (context) => SettingsPage()));
           }),
           _buildDrawerItem(Icons.logout_outlined, "Logout", () async {
-            await Provider.of<AuthProvider>(context, listen: false).signOut(
+            await Provider.of<CustomAuthProvider>(context, listen: false).signOut(
                 context);
           }),
 

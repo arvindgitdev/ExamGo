@@ -7,6 +7,7 @@ import 'package:examgo/Student/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Studentpage extends StatelessWidget {
   const Studentpage({super.key});
@@ -66,120 +67,142 @@ class Studentpage extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        // Modified part of the ElevatedButton onPressed callback in Studentpage
-                          onPressed: () async {
-                            String key = examKeyController.text.trim();
+                        onPressed: () async {
+                          String key = examKeyController.text.trim();
 
-                            if (key.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please enter a valid key')),
-                              );
-                              return;
-                            }
+                          if (key.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please enter a valid key')),
+                            );
+                            return;
+                          }
 
-                            try {
-                              // Query for exam with matching key
-                              final querySnapshot = await FirebaseFirestore.instance
-                                  .collection('exams')
-                                  .where('examKey', isEqualTo: key)
+                          try {
+                            // Query for exam with matching key
+                            final querySnapshot = await FirebaseFirestore.instance
+                                .collection('exams')
+                                .where('examKey', isEqualTo: key)
+                                .get();
+
+                            if (querySnapshot.docs.isNotEmpty) {
+                              final examDoc = querySnapshot.docs.first;
+                              final examData = examDoc.data();
+                              final examId = examDoc.id;
+
+                              // Get current user
+                              final user = FirebaseAuth.instance.currentUser;
+                              if (user == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('User not authenticated'), backgroundColor: Colors.red),
+                                );
+                                return;
+                              }
+
+                              // Check if the student has already submitted this exam
+                              final submissionQuery = await FirebaseFirestore.instance
+                                  .collection('exam_submissions')
+                                  .where('examId', isEqualTo: examId)
+                                  .where('userId', isEqualTo: user.uid)
                                   .get();
 
-                              if (querySnapshot.docs.isNotEmpty) {
-                                final examDoc = querySnapshot.docs.first;
-                                final examData = examDoc.data();
-                                final examId = examDoc.id;
-
-                                // Get current time
-                                final now = DateTime.now().millisecondsSinceEpoch;
-
-                                // Get exam timestamp from Firestore
-                                final examTimestamp = examData['examTimestamp'] as int;
-
-                                // Parse duration string to get exam end time
-                                final durationStr = examData['duration'] as String; // Format: "2h 30m"
-                                final hours = int.parse(durationStr.split('h')[0]);
-                                final minutes = int.parse(durationStr.split('h')[1].trim().split('m')[0]);
-                                final durationMillis = (hours * 60 * 60 + minutes * 60) * 1000;
-
-                                final examEndTime = examTimestamp + durationMillis;
-
-                                // Calculate time differences in minutes
-                                final minsUntilExam = (examTimestamp - now) / (1000 * 60);
-                                final minsSinceExamStarted = (now - examTimestamp) / (1000 * 60);
-
-                                // Case 1: Exam completed
-                                if (now > examEndTime) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('This exam has already ended'), backgroundColor: Colors.red),
-                                  );
-                                  return;
-                                }
-
-                                // Case 2: Exam is upcoming but within 15 min window - allow instructions only
-                                else if (minsUntilExam <= 15 && minsUntilExam > 0) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ExamInstructionsPage(
-                                        examId: examId,
-                                        examData: examData,
-                                        canStartExam: false,
-                                        message: 'Exam will start in ${minsUntilExam.ceil()} minutes',
-                                      ),
-                                    ),
-                                  );
-                                }
-
-                                // Case 3: Exam is ongoing but within 10 min late window - allow full access
-                                else if (minsSinceExamStarted <= 10 && minsSinceExamStarted > 0) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ExamInstructionsPage(
-                                        examId: examId,
-                                        examData: examData,
-                                        canStartExam: true,
-                                        message: 'Exam is in progress. You can start now.',
-                                      ),
-                                    ),
-                                  );
-                                }
-
-                                // Case 4: Exam is ongoing but past 10 min window - deny access
-                                else if (minsSinceExamStarted > 10 && now < examEndTime) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('You are more than 10 minutes late. Entry denied.'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                // Case 5: Exam hasn't started yet and not within 15 min window
-                                else if (minsUntilExam > 15) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Exam will start in ${(minsUntilExam / 60).floor()} hours and ${(minsUntilExam % 60).ceil()} minutes. You can enter 15 minutes before the start time.'),
-                                      backgroundColor: Colors.orange,
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                              } else {
-                                // Key is invalid
+                              if (submissionQuery.docs.isNotEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Invalid Exam Key'), backgroundColor: Colors.red),
+                                  const SnackBar(content: Text('You have already submitted this exam'), backgroundColor: Colors.red),
+                                );
+                                return;
+                              }
+
+                              // Get current time
+                              final now = DateTime.now().millisecondsSinceEpoch;
+
+                              // Get exam timestamp from Firestore
+                              final examTimestamp = examData['examTimestamp'] as int;
+
+                              // Parse duration string to get exam end time
+                              final durationStr = examData['duration'] as String; // Format: "2h 30m"
+                              final hours = int.parse(durationStr.split('h')[0]);
+                              final minutes = int.parse(durationStr.split('h')[1].trim().split('m')[0]);
+                              final durationMillis = (hours * 60 * 60 + minutes * 60) * 1000;
+
+                              final examEndTime = examTimestamp + durationMillis;
+
+                              // Calculate time differences in minutes
+                              final minsUntilExam = (examTimestamp - now) / (1000 * 60);
+                              final minsSinceExamStarted = (now - examTimestamp) / (1000 * 60);
+
+                              // Case 1: Exam completed
+                              if (now > examEndTime) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('This exam has already ended'), backgroundColor: Colors.red),
+                                );
+                                return;
+                              }
+
+                              // Case 2: Exam is upcoming but within 15 min window - allow instructions only
+                              else if (minsUntilExam <= 15 && minsUntilExam > 0) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ExamInstructionsPage(
+                                      examId: examId,
+                                      examData: examData,
+                                      canStartExam: false,
+                                      message: 'Exam will start in ${minsUntilExam.ceil()} minutes',
+                                    ),
+                                  ),
                                 );
                               }
-                            } catch (e) {
-                              // Handle error
+
+                              // Case 3: Exam is ongoing but within 10 min late window - allow full access
+                              else if (minsSinceExamStarted <= 10 && minsSinceExamStarted > 0) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ExamInstructionsPage(
+                                      examId: examId,
+                                      examData: examData,
+                                      canStartExam: true,
+                                      message: 'Exam is in progress. You can start now.',
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              // Case 4: Exam is ongoing but past 10 min window - deny access
+                              else if (minsSinceExamStarted > 10 && now < examEndTime) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('You are more than 10 minutes late. Entry denied.'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              // Case 5: Exam hasn't started yet and not within 15 min window
+                              else if (minsUntilExam > 15) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Exam will start in ${(minsUntilExam / 60).floor()} hours and ${(minsUntilExam % 60).ceil()} minutes. You can enter 15 minutes before the start time.'),
+                                    backgroundColor: Colors.orange,
+                                  ),
+                                );
+                                return;
+                              }
+
+                            } else {
+                              // Key is invalid
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error validating key: $e'), backgroundColor: Colors.red),
+                                const SnackBar(content: Text('Invalid Exam Key'), backgroundColor: Colors.red),
                               );
                             }
-                          },
+                          } catch (e) {
+                            // Handle error
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error validating key: $e'), backgroundColor: Colors.red),
+                            );
+                          }
+                        },
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
                         child: const Text('Enter Exam'),
                       ),
@@ -227,7 +250,7 @@ class Studentpage extends StatelessWidget {
   }
 
   Widget _buildDrawer(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<CustomAuthProvider>(context, listen: false);
     final user = authProvider.currentUser;
     return Drawer(
       child: Column(
@@ -256,7 +279,7 @@ class Studentpage extends StatelessWidget {
             Navigator.push(context, MaterialPageRoute(builder: (context) => StudentSettings()));
           }),
           _buildDrawerItem(Icons.logout_outlined, "Logout", () async {
-            await Provider.of<AuthProvider>(context, listen: false).signOut(context);
+            await Provider.of<CustomAuthProvider>(context, listen: false).signOut(context);
           }),
         ],
       ),

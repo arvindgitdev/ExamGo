@@ -232,7 +232,7 @@ class SignupPageState extends State<SignupPage> {
                       });
 
                       // Call sign-up function from AuthProvider
-                       await Provider.of<AuthProvider>(context, listen: false)
+                       await Provider.of<CustomAuthProvider>(context, listen: false)
                           .signUpWithEmail(_emailController.text.trim(), _passwordController.text, userType, context);
 
                       setState(() {
@@ -265,7 +265,7 @@ class SignupPageState extends State<SignupPage> {
                         isLoading = true;
                       });
 
-                       await Provider.of<AuthProvider>(context, listen: false).signInWithGoogle(userType, context);
+                       await Provider.of<CustomAuthProvider>(context, listen: false).signInWithGoogle(userType, context);
 
                       setState(() {
                         isLoading = false;
