@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ExamContentPage extends StatefulWidget {
@@ -22,11 +23,28 @@ class _ExamContentPageState extends State<ExamContentPage> {
   Timer? timer;
   int remainingSeconds = 0;
   final Map<int, TextEditingController> _textControllers = {};
+  bool hasAppClosedOnce = false;
 
   @override
   void initState() {
     super.initState();
     loadExam();
+    SystemChannels.lifecycle.setMessageHandler((msg) {
+      if (msg == AppLifecycleState.paused.toString()) {
+        if (hasAppClosedOnce) {
+          submitExam(); // Auto-submit if the app is closed twice
+        } else {
+          setState(() => hasAppClosedOnce = true); // Warn the first time
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Warning: Don\'t close the app during the exam!'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+      return Future.value('');
+    });
   }
 
   @override
@@ -100,7 +118,21 @@ class _ExamContentPageState extends State<ExamContentPage> {
     return _textControllers[index]!;
   }
 
+  void saveAnswer(dynamic answer) {
+    setState(() {
+      if (questions[currentQuestionIndex]['type'] == 'Multiple Choice') {
+        // Save selected index
+        answers[currentQuestionIndex] = answer;
+      } else {
+        // Save text-based answers
+        answers[currentQuestionIndex] = answer;
+      }
+    });
+  }
+
   void submitExam() async {
+    setState(() => isLoading = true); // Show loading indicator
+
     timer?.cancel();
 
     try {
@@ -113,11 +145,20 @@ class _ExamContentPageState extends State<ExamContentPage> {
         final question = questions[i];
         final answer = answers[i];
 
+        // Convert multiple choice index to option text for clarity
+        dynamic finalAnswer = answer;
+        if (question['type'] == 'Multiple Choice' &&
+            answer is int &&
+            question['options'] != null &&
+            answer < (question['options'] as List).length) {
+          finalAnswer = question['options'][answer];
+        }
+
         detailedAnswers.add({
           'questionId': question['id'],
           'questionText': question['question'],
           'questionType': question['type'],
-          'answer': answer,
+          'answer': finalAnswer,
         });
       }
 
@@ -129,12 +170,26 @@ class _ExamContentPageState extends State<ExamContentPage> {
       });
 
       if (mounted) {
-        Navigator.popUntil(context, (route) => route.isFirst);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Exam submitted!'), backgroundColor: Colors.green),
+        setState(() => isLoading = false);
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Exam Submitted"),
+            content: const Text("Your exam has been successfully submitted."),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.popUntil(context, (route) => route.isFirst);
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
         );
       }
     } catch (e) {
+      setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Submission failed: $e'), backgroundColor: Colors.red),
       );
@@ -147,8 +202,6 @@ class _ExamContentPageState extends State<ExamContentPage> {
     int s = seconds % 60;
     return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
-
-  void saveAnswer(dynamic answer) => setState(() => answers[currentQuestionIndex] = answer);
 
   void nextQuestion() => setState(() => currentQuestionIndex++);
 
@@ -197,113 +250,122 @@ class _ExamContentPageState extends State<ExamContentPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(examData['title'] ?? "Exam", style: GoogleFonts.poppins()),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Chip(
-              backgroundColor: remainingSeconds < 300 ? Colors.red.shade100 : Colors.green.shade100,
-              label: Text(
-                formatTime(remainingSeconds),
-                style: TextStyle(
-                  color: remainingSeconds < 300 ? Colors.red : Colors.green.shade800,
-                  fontWeight: FontWeight.bold,
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Text(examData['title'] ?? "Exam", style: GoogleFonts.poppins()),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Chip(
+                backgroundColor: remainingSeconds < 300 ? Colors.red.shade100 : Colors.green.shade100,
+                label: Text(
+                  formatTime(remainingSeconds),
+                  style: TextStyle(
+                    color: remainingSeconds < 300 ? Colors.red : Colors.green.shade800,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LinearProgressIndicator(
-              value: (currentQuestionIndex + 1) / questions.length,
-              minHeight: 6,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation(Colors.indigo),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Question ${currentQuestionIndex + 1} of ${questions.length}',
-              style: GoogleFonts.poppins(color: Colors.grey.shade700),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
-                child: Container(
-                  key: ValueKey(currentQuestionIndex),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(color: Colors.grey.shade300, blurRadius: 10, offset: const Offset(0, 4))
-                    ],
+          ],
+        ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LinearProgressIndicator(
+                value: (currentQuestionIndex + 1) / questions.length,
+                minHeight: 6,
+                backgroundColor: Colors.grey.shade300,
+                valueColor: const AlwaysStoppedAnimation(Colors.indigo),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Question ${currentQuestionIndex + 1} of ${questions.length}',
+                style: GoogleFonts.poppins(color: Colors.grey.shade700),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, animation) =>
+                      FadeTransition(opacity: animation, child: child),
+                  child: Container(
+                    key: ValueKey(currentQuestionIndex),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.shade300,
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: buildQuestion(questions[currentQuestionIndex]),
                   ),
-                  child: buildQuestion(questions[currentQuestionIndex]),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text("Back"),
-                    onPressed: currentQuestionIndex > 0 ? previousQuestion : null,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.grey.shade400),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text("Back"),
+                      onPressed: currentQuestionIndex > 0 ? previousQuestion : null,
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.grey.shade400),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.check_circle),
-                    label: const Text("Submit"),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    onPressed: () => showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text("Submit Exam"),
-                        content: const Text("Are you sure you want to submit your answers?"),
-                        actions: [
-                          TextButton(
-                            child: const Text("Cancel"),
-                            onPressed: () => Navigator.pop(ctx),
-                          ),
-                          ElevatedButton(
-                            child: const Text("Submit"),
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              submitExam();
-                            },
-                          ),
-                        ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.check_circle),
+                      label: const Text("Submit"),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      onPressed: () => showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text("Submit Exam"),
+                          content: const Text("Are you sure you want to submit your answers?"),
+                          actions: [
+                            TextButton(
+                              child: const Text("Cancel"),
+                              onPressed: () => Navigator.pop(ctx),
+                            ),
+                            ElevatedButton(
+                              child: const Text("Submit"),
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                submitExam();
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text("Next"),
-                    onPressed: currentQuestionIndex < questions.length - 1 ? nextQuestion : null,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.arrow_forward),
+                      label: const Text("Next"),
+                      onPressed: currentQuestionIndex < questions.length - 1 ? nextQuestion : null,
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+                    ),
                   ),
-                ),
-              ],
-            )
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
